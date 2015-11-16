@@ -26,14 +26,13 @@ Module1Appl::~Module1Appl() {
 int Module1Appl::moduleMainFunc(){
 	map<char, vector<double> > mapVal = helper.initializeDataStructure();
 
-	mapVal.find(helper.TIME);
 	data.time = mapVal.find(helper.TIME)->second;
 	data.priceD = mapVal.find(helper.PRICE)->second;
 	data.forward = mapVal.find(helper.FORWARD)->second;
 
-	implVol.vol = helper.initializeVolatility();
-	implVol.maturity = helper.initializeSwaptionVolatilityMaturity();
-	implVol.tenor = helper.initializeSwaptionVolatilityTenor();
+	actualVol.vol = helper.initializeVolatility();
+	actualVol.maturity = helper.initializeSwaptionVolatilityMaturity();
+	actualVol.tenor = helper.initializeSwaptionVolatilityTenor();
 
 	for(int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
@@ -41,20 +40,21 @@ int Module1Appl::moduleMainFunc(){
 
 	assignMeanReversion();
 	assignVol(0);
+	calculateEt();
+
 	double t = 0.0;
 	double T = 0.0;
 	double K = 0.04;
 	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
 	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 	cout << "Maturity\\Tenor\t" ;
-	for(vector<double>::iterator it_ten = implVol.tenor.begin(); it_ten != implVol.tenor.end(); ++it_ten){
+	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
 		cout << *it_ten << "\t";
 	}
 	cout << endl;
-	for(vector<double>::iterator it_mat = implVol.maturity.begin(); it_mat!=implVol.maturity.end(); ++it_mat){
+	for(vector<double>::iterator it_mat = actualVol.maturity.begin(); it_mat!=actualVol.maturity.end(); ++it_mat){
 		cout << *it_mat << "\t";
-		for(vector<double>::iterator it_ten = implVol.tenor.begin(); it_ten != implVol.tenor.end(); ++it_ten){
-			calculateEt();
+		for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
 
 			t = *it_mat;
 			T = *it_ten + t;
@@ -63,20 +63,6 @@ int Module1Appl::moduleMainFunc(){
 		}
 		cout << endl;
 	}
-//
-//	assignMeanReversion();
-//	assignVol(0);
-//	calculateEt();
-////	calculateVr(1);
-//	vector<double> th = theta();
-//
-//	cout << "a\t" << *(data.a.begin())<<"\t";
-//	cout << "sigma\t" << *(data.sigma.begin())<<"\t";
-//	for(vector<double>::iterator it = th.begin(); it != th.end(); ++it){
-//		cout << *it << "\t" ;
-//	}
-//	cout << endl;
-
 	return 0;
 }
 

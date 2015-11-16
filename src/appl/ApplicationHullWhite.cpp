@@ -20,8 +20,8 @@ int ApplicationHullWhite::moduleChooserFunc(){
 	char choice;
 	cout << "Choose Module to execute: " << endl;
 	cout << "Press 1 for Module 1: Pricing European Swaption" << endl;
-	cout << "Press 2 for Module 2: Calculating BS swaption volatility" << endl;
-	cout << "Press 3 for Module 3: Calibrating theta to yield curve" << endl;
+	cout << "Press 2 for Module 2: Calibrating theta to yield curve" << endl;
+	cout << "Press 3 for Module 3: Calculating BS swaption volatility" << endl;
 	cout << "Press 4 for Module 4: Calibrating mean reversion and volatility" << endl;
 	cout << "Exit:     Press q" << endl;
 

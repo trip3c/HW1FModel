@@ -97,7 +97,7 @@ double BaseModule::calculateA(double t, double T){
 //-----------------------
 
 
-// Returns the erf() of a value (not super precice, but ok)
+// Returns the erf() of a value (not super precise, but ok)
 double BaseModule::erf(double x){
     double y = 1.0 / ( 1.0 + 0.3275911 * x);
     return 1 - (((((
@@ -142,7 +142,7 @@ double BaseModule::fun_dev(const vector<double>& c, const vector<double>& A, con
     return d;
 }
 
-//Newton's algrithm to solve r*
+//Newton's algorithm to solve r*
 double BaseModule::solveR(const vector<double>& c, const vector<double>& A, const vector<double>& B){
     double r = 0.5;
     while (fabs(fun_r(c, A, B, r)) > 1E-10) {
@@ -211,3 +211,34 @@ vector<double> BaseModule::theta(){
     }
     return theta_vec;
 }
+//
+//double interval_bisection(double y_target,  // Target y value
+//                          double m,         // Left interval value
+//                          double n,         // Right interval value
+//                          double epsilon,   // Tolerance
+//                          T g) {            // Function object of type T, named g
+//
+//  // Create the initial x mid-point value
+//  // Find the mapped y value of g(x)
+//  double x = 0.5 * (m + n);
+//  double y = g(x);
+//
+//  // While the difference between y and the y_target
+//  // value is greater than epsilon, keep subdividing
+//  // the interval into successively smaller halves
+//  // and re-evaluate the new y.
+//  do {
+//    if (y < y_target) {
+//      m = x;
+//    }
+//
+//    if (y > y_target) {
+//      n = x;
+//    }
+//
+//    x = 0.5 * (m + n);
+//    y = g(x);
+//  } while (fabs(y-y_target) > epsilon);
+//
+//  return x;
+//}

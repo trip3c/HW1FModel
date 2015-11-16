@@ -82,7 +82,7 @@ public:
 	/**
 	 * The reference for the swaption volatility
 	 */
-	SwaptionVolStruct implVol;
+	SwaptionVolStruct actualVol;
 
 	/**
 	 * An object that maps time data point as key to index of the time as the value.
@@ -90,25 +90,116 @@ public:
 	 */
 	map<double, int> timePos;
 
+	/*
+	 * This method calculates the exponential integration over the mean reversion for each period
+	 */
 	void calculateEt();
-	int locate(double t);
 
+	/*
+	 * This method generates the index of a particular time in the time vector
+	 * @param timeP the time to search for
+	 * @return the index of the time
+	 */
+	int locate(double timeP);
 
+	/*
+	 * This method calculates the value of B(t) function for Affine structure
+	 * @param t The start of bond period
+	 * @param T The end of bond period
+	 * @return the value of B(t)
+	 */
 	double calculateB(double t, double T);
+
+	/*
+	 * This method calculates the value of A(t) function for Affine structure
+	 * @param t The start of bond period
+	 * @param T The end of bond period
+	 * @return the value of A(t)
+	 */
 	double calculateA(double t, double T);
+
+	/*
+	 * This method calculates the variance of short rate from the initial time
+	 * @param t the end of calculation period
+	 * @return variance of short rate
+	 */
 	double calculateVr(double t);
+
+	/*
+	 * This method calculates the variance of bond ratio P(0,Tf)/P(0,Tp)
+	 * @param Tf The maturity of denominator bond
+	 * @param Tp The maturity of nominator bond
+	 * @return the of variance bond ratio
+	 */
 	double calculateVp(double Tf, double Tp);
 
+	/**
+	 * This method calculates the value of Gauss error function, which is a helper function for calculating Normal cdf
+	 * @param x the input of error function
+	 * @return the value of error function
+	 */
 	double erf(double x);
+
+	/**
+	 * This method approximates the normal cumulative distribution function
+	 * @param x the critical value
+	 * @param mu the mean of normal distribution
+	 * @param sigma the standard deviation of normal distribution
+	 * @return the cdf probability
+	 */
 	double N(double x, double mu, double sigma);
+
+	/**
+	 * This method calculates the value of a zero-bond put option
+	 * @param Tf the maturity of the option
+	 * @param Tp the maturity of the bond
+	 * @param X Strike of the option
+	 * @return the value of put option
+	 */
 	double ZBP(double Tf, double Tp, double X);
+
+	/**
+	 * This method calculates the value of a payer swaption
+	 * @param K the strike rate of the swaption
+	 * @param T0 the maturity of the swaption
+	 * @param Tp the swap tenor
+	 * @return the value of swaption
+	 */
 	double pSwaption(double K, double T0, double Tp);
+
+	/**
+	 * This is a helper function for the solveR()
+	 */
 	double fun_r(const vector<double>& c, const vector<double>& A, const vector<double>& B, double r);
+
+	/**
+	 * This is another helper function for the solveR()
+	 */
 	double fun_dev(const vector<double>& c, const vector<double>& A, const vector<double>& B, double r);
+
+	/**
+	 * This method solves the r* in calculating the swaption price
+	 * @param c the coupon payment of each period
+	 * @param A the vector of A value for each period
+	 * @param B the vector of B value for each period
+	 * @return the solution of r*
+	 */
 	double solveR(const vector<double>& c, const vector<double>& A, const vector<double>& B);
 
+	/**
+	 * This method calculates the value of theta for each period
+	 */
 	vector<double> theta();
+
+	/**
+	 * This method calculates the first or second derivate of a function numerically with cubic spline smoothing method
+	 * @param value the vector of value for the function for each period
+	 * @param point where to take derivatives
+	 * @param n specifies the 1st or 2nd derivative
+	 * @return the value of the derivative
+	 */
 	double takeDev(const vector<double>& value, double point, int n);
+
 };
 
 #endif /* BASEMODULE_H_ */
