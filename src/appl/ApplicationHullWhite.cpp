@@ -17,12 +17,12 @@ int ApplicationHullWhite::moduleChooserFunc(){
 	cout << defPath << endl;
 
 	char choice;
-	do{
+//	do{
 		cout << "Choose Module to execute: " << endl;
-		cout << "Module 1: Press 1" << endl;
-		cout << "Module 2: Press 2" << endl;
-		cout << "Module 3: Press 3" << endl;
-		cout << "Module 4: Press 4" << endl;
+		cout << "Press 1 for Module 1: Pricing European Swaption" << endl;
+		cout << "Press 2 for Module 2: Calculating BS swaption volatility" << endl;
+		cout << "Press 3 for Module 3: Calibrating theta to yield curve" << endl;
+		cout << "Press 4 for Module 4: Calibrating mean reversion and volatility" << endl;
 		cout << "Exit:     Press q" << endl;
 
 		cin >> choice;
@@ -37,6 +37,6 @@ int ApplicationHullWhite::moduleChooserFunc(){
 		}else if (choice=='4'){
 			cout<< "choice 4 " << endl;
 		}
-	} while(choice == '1' || choice == '2' || choice == '3' || choice == '4');
+//	} while(choice == '1' || choice == '2' || choice == '3' || choice == '4');
 	return 0;
 }

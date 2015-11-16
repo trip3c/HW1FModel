@@ -21,33 +21,47 @@ Module1Appl::Module1Appl() {
 }
 
 Module1Appl::~Module1Appl() {
-	cout << "Module1Appl destructor" << endl;
+//	cout << "Module1Appl destructor" << endl;
 }
 
 int Module1Appl::moduleMainFunc(){
-//	assignMeanReversion();
-//	double t = 0.0;
-//	double T = 0.0;
-//	double K = 0.02;
-//	for(vector<double>::iterator it_mat = implVol.maturity.begin(); it_mat!=implVol.maturity.end(); ++it_mat){
-//		for(vector<double>::iterator it_ten = implVol.tenor.begin(); it_ten != implVol.tenor.end(); ++it_ten){
-//			assignVol(0);
-//			calculateEt();
-//
-//			t = *it_mat;
-//			T = *it_ten + t;
-//			pSwaption(K, t, T);
-//		}
-//	}
-
 	assignMeanReversion();
 	assignVol(0);
-	calculateEt();
-	vector<double> th = theta();
-
-	for(vector<double>::iterator it = th.begin(); it != th.end(); ++it){
-		cout << *it << "\t" ;
+	double t = 0.0;
+	double T = 0.0;
+	double K = 0.04;
+	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
+	cout << "sigma\t" << *(data.sigma.begin())<<endl;
+	cout << "Maturity\\Tenor\t" ;
+	for(vector<double>::iterator it_ten = implVol.tenor.begin(); it_ten != implVol.tenor.end(); ++it_ten){
+		cout << *it_ten << "\t";
 	}
+	cout << endl;
+	for(vector<double>::iterator it_mat = implVol.maturity.begin(); it_mat!=implVol.maturity.end(); ++it_mat){
+		cout << *it_mat << "\t";
+		for(vector<double>::iterator it_ten = implVol.tenor.begin(); it_ten != implVol.tenor.end(); ++it_ten){
+			calculateEt();
+
+			t = *it_mat;
+			T = *it_ten + t;
+			double price = pSwaption(K, t, T);
+			cout << price << "\t";
+		}
+		cout << endl;
+	}
+//
+//	assignMeanReversion();
+//	assignVol(0);
+//	calculateEt();
+////	calculateVr(1);
+//	vector<double> th = theta();
+//
+//	cout << "a\t" << *(data.a.begin())<<"\t";
+//	cout << "sigma\t" << *(data.sigma.begin())<<"\t";
+//	for(vector<double>::iterator it = th.begin(); it != th.end(); ++it){
+//		cout << *it << "\t" ;
+//	}
+//	cout << endl;
 
 	return 0;
 }
@@ -86,8 +100,8 @@ void Module1Appl::interpolatePricesAndForwardRates(vector<vector<double> > newNu
 
 	// Interpolating forwards data
 	for (std::set<double>::iterator it=yearSet.begin(); it!=yearSet.end(); ++it){
-		data.t.push_back(*it);
-		data.f.push_back(s(*it));
+		data.time.push_back(*it);
+		data.forward.push_back(s(*it));
 	}
 
 	// Initializing discounts data - 3rd column
@@ -100,13 +114,14 @@ void Module1Appl::interpolatePricesAndForwardRates(vector<vector<double> > newNu
 	s.set_points(X,Z);    // currently it is required that X is already sorted
 	for (std::set<double>::iterator it=yearSet.begin(); it!=yearSet.end(); ++it){
 		double t=s(*it);
-		data.p.push_back(t);
+		data.priceD.push_back(t);
 	}
 }
 
 void Module1Appl::initializeDataStructure(){
 	string directoryPath = fileUtils.getDirectoryPath();
 	directoryPath += "\\src\\defs\\UCLA_Discounts.txt";
+//	directoryPath = "E:\\work\\cpp_ws\\hullwhite\\src\\defs\\UCLA_Discounts.txt";
 	cout << "Reading default input file: " << directoryPath << endl;
 	vector<vector<double> > importData =
 			fileUtils.importData(directoryPath);
@@ -116,8 +131,8 @@ void Module1Appl::initializeDataStructure(){
 
 //	printStructure();
 
-	for(int i=0; i<data.t.size(); i++){
-		timePos[data.t[i]] = i;
+	for(int i=0; i<data.time.size(); i++){
+		timePos[data.time[i]] = i;
 	}
 
 	directoryPath = fileUtils.getDirectoryPath();
@@ -137,14 +152,14 @@ void Module1Appl::initializeDataStructure(){
 }
 
 void Module1Appl::assignMeanReversion(){
-	double a = 0.05;
-	int x = data.t.size();
-	data.a.assign(x, a);
+	double a = 5.0/100;
+	int x = data.time.size();
+	data.aMeanReversion.assign(x, a);
 }
 
 void Module1Appl::assignVol(double s){
-	double s1 = 0.179;
-	int x = data.t.size();
+	double s1 = 70.0/100;
+	int x = data.time.size();
 	data.sigma.assign(x, s1);
 }
 
@@ -155,23 +170,18 @@ void Module1Appl::printStructure(){
 	vector<double>::iterator vi4;
 	vector<double>::iterator vi5;
 	vector<double>::iterator vi6;
-	vector<double>::iterator vi7;
-	vector<double>::iterator vi8;
-	for(vi1=data.t.begin(),
-		vi2=data.f.begin(),
-		vi3=data.p.begin(),
-		vi4=data.a.begin(),
+	for(vi1=data.time.begin(),
+		vi2=data.forward.begin(),
+		vi3=data.priceD.begin(),
+		vi4=data.aMeanReversion.begin(),
 		vi5=data.Et.begin(),
-		vi6=data.sigma.begin(),
-		vi7=data.B.begin()
+		vi6=data.sigma.begin()
 		;
-		vi1!=data.t.end();
-		++vi1,++vi2,++vi3,++vi4,++vi5,++vi6,++vi7) {
+		vi1!=data.time.end();
+		++vi1,++vi2,++vi3,++vi4,++vi5,++vi6) {
 		cout << *vi1 << " " << *vi2 << " " << *vi3 << " "
 			 << *vi4 << " "
 			 << *vi5 << " " << *vi6 << " "
-			 << *vi7 << " "
-//			 << *vi8 << " "
 			 << endl;
 	}
 }

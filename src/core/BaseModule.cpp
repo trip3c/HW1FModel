@@ -21,10 +21,10 @@ BaseModule::~BaseModule() {
 
 
 void BaseModule::calculateEt(){
-	data.Et.assign(data.t.size(), 0);
-	data.Et[0] = exp(data.a[0] * data.t[0]);
-	for(int i = 1; i<data.t.size(); ++i){
-		data.Et[i]  = exp(data.a[i] * (data.t[i] - data.t[i-1])) * data.Et[i-1];
+	data.Et.assign(data.time.size(), 0);
+	data.Et[0] = exp(data.aMeanReversion[0] * data.time[0]);
+	for(int i = 1; i<data.time.size(); ++i){
+		data.Et[i]  = exp(data.aMeanReversion[i] * (data.time[i] - data.time[i-1])) * data.Et[i-1];
 	}
 }
 
@@ -33,7 +33,7 @@ double BaseModule::calculateB(double t, double T){
     int position_T = locate(T);
     double summation = 0;
     for (int i = position_t+1; i <= position_T; i++){
-        summation = summation + (data.t[i] - data.t[i-1]) / data.Et[i];
+        summation = summation + (data.time[i] - data.time[i-1]) / data.Et[i];
     }
     if(t){
         summation = summation * data.Et[position_t];
@@ -63,10 +63,10 @@ double BaseModule::calculateVr(double t){
     int position_t = locate(t);
     double Vr = 0;
     for(int i = 0; i<=position_t; ++i){
-        Vr += pow(data.Et[i], 2) * pow(data.sigma[i], 2) * (data.t[i] - data.t[i-1]);
+        Vr += pow(data.Et[i], 2) * pow(data.sigma[i], 2) * (data.time[i] - data.time[i-1]);
     }
     Vr = Vr / pow(data.Et[position_t], 2);
-//    cout << "calculateVr = " << Vr << endl;
+//    cout << "calculateVr = \t" << Vr << endl;
     return Vr;
 }
 
@@ -82,12 +82,12 @@ double BaseModule::calculateA(double t, double T){
     int position_T = locate(T);
     double P0t=1;
     if(t){
-        P0t=data.p[position_t];
+        P0t=data.priceD[position_t];
         //f0t=data.f[position_t];
     }
     double valB = calculateB(t, T);
-    double x = log(data.p[position_T] / P0t) ;
-    double y = valB * data.f[position_t+1];
+    double x = log(data.priceD[position_T] / P0t) ;
+    double y = valB * data.forward[position_t+1];
     double z = 0.5 * pow(valB, 2) * calculateVr(t);
     double t1 = x + y - z;
 //    cout << "calculateA = " << x << "+" << y << "-" << z << "=" << t1 << endl;
@@ -117,11 +117,11 @@ double BaseModule::N(double x, double mu, double sigma){
 double BaseModule::ZBP(double Tf, double Tp, double X){
     int position_Tf = locate(Tf);
     int position_Tp = locate(Tp);
-    double l = log(data.p[position_Tf] * X / data.p[position_Tp]);
+    double l = log(data.priceD[position_Tf] * X / data.priceD[position_Tp]);
     double v = sqrt(calculateVp(Tf, Tp));
     double dP =  l / v + 0.5 * v;
     double dN = l / v - 0.5 * v;
-    return X * data.p[position_Tf] * N(dP, 0, 1) - data.p[position_Tp] * N(dN, 0, 1);
+    return X * data.priceD[position_Tf] * N(dP, 0, 1) - data.priceD[position_Tp] * N(dN, 0, 1);
 }
 
 //f(r)
@@ -159,8 +159,8 @@ double BaseModule::pSwaption(double K, double T0, double Tp){
     vector<double> Ai(position_Tp-position_T0);
     vector<double> Bi(position_Tp-position_T0);
     for(int i = 0; i < position_Tp - position_T0; ++i){
-        Ti[i] = data.t[position_T0 + i + 1];
-        ci[i] = K * (Ti[i] - data.t[position_T0 + i]);
+        Ti[i] = data.time[position_T0 + i + 1];
+        ci[i] = K * (Ti[i] - data.time[position_T0 + i]);
         Ai[i]=calculateA(T0, Ti[i]);
         Bi[i]=calculateB(T0, Ti[i]);
 //        cout << "Ai=" << Ai[i] << " Bi=" << Bi[i] << " ci=" << ci[i] << " Ti=" << Ti[i] << endl;
@@ -174,7 +174,7 @@ double BaseModule::pSwaption(double K, double T0, double Tp){
         price += ci[i] * ZBP(T0, Ti[i], Xi[i]);
 //        cout << "Xi=" << Xi[i] << " price=" << price <<endl;
     }
-    cout << "FinalPrice=" <<"\t"<< price << "\t "<< T0 << " \t" << Tp << endl;
+//    cout << "FinalPrice=" <<"\t"<< price << "\t "<< T0 << " \t" << Tp << endl;
     return price;
 }
 
@@ -182,7 +182,7 @@ double BaseModule::pSwaption(double K, double T0, double Tp){
 double BaseModule::takeDev(const vector<double>& value, double point, int n){
     //take first or second derivative
     tk::spline s;
-    s.set_points(data.t,value);
+    s.set_points(data.time,value);
     if (n==1) {
         return (s(point+0.01)-s(point-0.01))/0.02;
     }
@@ -192,22 +192,22 @@ double BaseModule::takeDev(const vector<double>& value, double point, int n){
 }
 
 vector<double> BaseModule::theta(){
-    vector<double> V(data.t.size());
-    vector<double> theta_vec(data.t.size());
-    for(int i = 0; i < data.t.size(); ++i){
+    vector<double> V(data.time.size());
+    vector<double> theta_vec(data.time.size());
+    for(int i = 0; i < data.time.size(); ++i){
         vector<double> sig(i+1);
         for(int j=0; j<=i; j++){
-            sig[j]=data.sigma[j] * calculateB(data.t[j], data.t[i]);
+            sig[j]=data.sigma[j] * calculateB(data.time[j], data.time[i]);
         }
-        V[i]=pow(sig[0], 2) * data.t[0] ;
+        V[i]=pow(sig[0], 2) * data.time[0] ;
         for(int j = 1; j <= i; ++j){
-            V[i]= V[i]+pow(sig[j], 2) * (data.t[j]-data.t[j-1]);
+            V[i]= V[i]+pow(sig[j], 2) * (data.time[j]-data.time[j-1]);
         }
     }
-    for(int i = 0; i < data.t.size(); ++i){
-        theta_vec[i]=takeDev(data.f, data.t[i], 1)
-        		+ data.a[i] * data.f[i]
-        		+ 0.5 * (takeDev(V, data.t[i], 2) + data.a[i] * takeDev(V, data.t[i], 1));
+    for(int i = 0; i < data.time.size(); ++i){
+        theta_vec[i]=takeDev(data.forward, data.time[i], 1)
+        		+ data.aMeanReversion[i] * data.forward[i]
+        		+ 0.5 * (takeDev(V, data.time[i], 2) + data.aMeanReversion[i] * takeDev(V, data.time[i], 1));
     }
     return theta_vec;
 }
