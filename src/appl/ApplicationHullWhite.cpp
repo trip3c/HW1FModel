@@ -2,6 +2,7 @@
 #include <string>
 #include "ApplicationHullWhite.h"
 #include "..\mod1\Module1Appl.h"
+#include "..\mod2\Module2Appl.h"
 
 using namespace std;
 
@@ -30,7 +31,9 @@ int ApplicationHullWhite::moduleChooserFunc(){
 		Module1Appl mod1 = Module1Appl();
 		mod1.moduleMainFunc();
 	}else if (choice=='2'){
-		cout<< "choice 2 " << endl;
+		cout<< "Module 2 starting... " << endl;
+		Module2Appl mod2 = Module2Appl();
+		mod2.moduleMainFunc();
 	}else if (choice=='3'){
 		cout<< "choice 3 " << endl;
 	}else if (choice=='4'){
