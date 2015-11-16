@@ -4,8 +4,9 @@
  *  Created on: Nov 10, 2015
  *      Author: Chandra
  */
-#include "..\core\FileUtils.h"
+
 #include "..\core\BaseModule.h"
+#include "..\core\ModuleHelper.h"
 
 #ifndef MODULE1APPL_H_
 #define MODULE1APPL_H_
@@ -13,12 +14,9 @@
 class Module1Appl: public BaseModule{
 
 private:
-	FileUtils fileUtils;
-	void initializeDataStructure();
-	void interpolatePricesAndForwardRates(vector<vector<double> > newNumbers);
+	ModuleHelper helper = ModuleHelper();
 	void assignMeanReversion();
 	void assignVol(double s);
-	void printStructure();
 public:
 	Module1Appl();
 	virtual ~Module1Appl();
