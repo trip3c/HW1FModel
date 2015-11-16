@@ -9,6 +9,7 @@
 #include <math.h>
 #include "BaseModule.h"
 #include "spline.h"
+#include "Constants.h"
 
 BaseModule::BaseModule() {
 	// TODO Auto-generated constructor stub
@@ -154,11 +155,12 @@ double BaseModule::solveR(const vector<double>& c, const vector<double>& A, cons
 double BaseModule::pSwaption(double K, double T0, double Tp){
     int position_T0 = locate(T0);
     int position_Tp = locate(Tp);
-    vector<double> ci(position_Tp-position_T0);
-    vector<double> Ti(position_Tp-position_T0);
-    vector<double> Ai(position_Tp-position_T0);
-    vector<double> Bi(position_Tp-position_T0);
-    for(int i = 0; i < position_Tp - position_T0; ++i){
+    int cashFlowTimes = position_Tp-position_T0;
+    vector<double> ci(cashFlowTimes);
+    vector<double> Ti(cashFlowTimes);
+    vector<double> Ai(cashFlowTimes);
+    vector<double> Bi(cashFlowTimes);
+    for(int i = 0; i < cashFlowTimes; ++i){
         Ti[i] = data.time[position_T0 + i + 1];
         ci[i] = K * (Ti[i] - data.time[position_T0 + i]);
         Ai[i]=calculateA(T0, Ti[i]);
@@ -167,9 +169,9 @@ double BaseModule::pSwaption(double K, double T0, double Tp){
     }
     ci.back() += 1;
     double r_star = solveR(ci, Ai, Bi);
-    vector<double> Xi(position_Tp - position_T0);
+    vector<double> Xi(cashFlowTimes);
     double price = 0;
-    for(int i = 0; i < position_Tp - position_T0; ++i){
+    for(int i = 0; i < cashFlowTimes; ++i){
         Xi[i] = exp(Ai[i] - Bi[i] * r_star);
         price += ci[i] * ZBP(T0, Ti[i], Xi[i]);
 //        cout << "Xi=" << Xi[i] << " price=" << price <<endl;
@@ -242,3 +244,28 @@ vector<double> BaseModule::theta(){
 //
 //  return x;
 //}
+
+double BaseModule::calculateVswap(double T0, double Tn){
+	double value=0.0;
+	double Vp = calculateVp(T0, Tn);
+	double priceT0 = data.priceD[locate(T0)];
+	double priceTn = data.priceD[locate(Tn)];
+	double val2 = pow((priceT0/(priceT0 - priceTn)),2.0);
+	value = Vp * val2;
+//	cout << "Vswap\t" << value << "\t" << priceT0 << "\t"
+//			<< priceTn << "\tImplVol\t" << sqrt(value) << endl;
+	return value;
+}
+
+
+void BaseModule::assignConstantMeanReversion(){
+	double a = constants.FIXED_MEAN_REVERSION;
+	int x = data.time.size();
+	data.aMeanReversion.assign(x, a);
+}
+
+void BaseModule::assignConstantVol(){
+	double s1 = constants.FIXED_VOLATILITY;
+	int x = data.time.size();
+	data.sigma.assign(x, s1);
+}

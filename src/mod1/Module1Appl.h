@@ -15,8 +15,6 @@ class Module1Appl: public BaseModule{
 
 private:
 	ModuleHelper helper = ModuleHelper();
-	void assignMeanReversion();
-	void assignVol(double s);
 public:
 	Module1Appl();
 	virtual ~Module1Appl();

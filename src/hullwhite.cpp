@@ -6,17 +6,6 @@
 // Description : Hull White One Factor Calibration
 //============================================================================
 
-#include <iostream>
-#include <limits>
-#include <cmath>
-#include <vector>
-#include <string>
-#include <cstring>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <iterator>
-#include "spline.h"
 #include "appl\ApplicationHullWhite.h"
 
 int main(int argc, char * argv[]){

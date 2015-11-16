@@ -1,5 +1,5 @@
 /*
- * Module2Appl.h
+ * Module3Appl.h
  *
  *  Created on: Nov 15, 2015
  *      Author: Chandra
@@ -8,17 +8,17 @@
 #include "..\core\BaseModule.h"
 #include "..\core\ModuleHelper.h"
 
-#ifndef MODULE2APPL_H_
-#define MODULE2APPL_H_
+#ifndef MODULE3APPL_H_
+#define MODULE3APPL_H_
 
-class Module2Appl: public BaseModule{
+class Module3Appl: public BaseModule{
 
 private:
 	ModuleHelper helper = ModuleHelper();
 public:
-	Module2Appl();
-	virtual ~Module2Appl();
+	Module3Appl();
+	virtual ~Module3Appl();
 	int moduleMainFunc();
 };
 
-#endif /* MODULE2APPL_H_ */
+#endif /* MODULE3APPL_H_ */

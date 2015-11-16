@@ -1,7 +1,7 @@
 /*
- * Module1Appl.cpp
+ * Module3Appl.cpp
  *
- *  Created on: Nov 10, 2015
+ *  Created on: Nov 15, 2015
  *      Author: Chandra
  */
 #include <iostream>
@@ -12,17 +12,18 @@
 #include <iomanip>
 #include "../core/spline.h"
 
-#include "Module1Appl.h"
+#include "Module3Appl.h"
 
 using namespace std;
 
-Module1Appl::Module1Appl() {
+Module3Appl::Module3Appl() {
 }
 
-Module1Appl::~Module1Appl() {
+Module3Appl::~Module3Appl() {
+//	cout << "Module3Appl destructor" << endl;
 }
 
-int Module1Appl::moduleMainFunc(){
+int Module3Appl::moduleMainFunc(){
 	map<char, vector<double> > mapVal = helper.initializeDataStructure();
 
 	data.time = mapVal.find(helper.TIME)->second;
@@ -33,10 +34,6 @@ int Module1Appl::moduleMainFunc(){
 	actualVol.maturity = helper.initializeSwaptionVolatilityMaturity();
 	actualVol.tenor = helper.initializeSwaptionVolatilityTenor();
 
-//	for(std::vector<double>::iterator it = actualVol.tenor.begin();
-//			it!=actualVol.tenor.end(); ++it){
-//		cout << *it << endl;
-//	}
 	for(int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
@@ -47,7 +44,6 @@ int Module1Appl::moduleMainFunc(){
 
 	double t = 0.0;
 	double T = 0.0;
-	double K = constants.FIXED_STRIKE;
 	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
 	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 	cout << "Maturity\\Tenor\t" ;
@@ -61,10 +57,12 @@ int Module1Appl::moduleMainFunc(){
 
 			t = *it_mat;
 			T = *it_ten + t;
-			double price = pSwaption(K, t, T);
-			cout << price << "\t";
+			double implVol = sqrt(calculateVswap(t, T));
+			cout << implVol << "\t";
 		}
 		cout << endl;
 	}
 	return 0;
 }
+
+

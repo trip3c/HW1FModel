@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <map>
+#include "Constants.h"
 
 using namespace std;
 
@@ -83,6 +84,12 @@ public:
 	 * The reference for the swaption volatility
 	 */
 	SwaptionVolStruct actualVol;
+
+	/**
+	 * The reference for constants file.
+	 * TODO Move to properties file
+	 */
+	Constants constants;
 
 	/**
 	 * An object that maps time data point as key to index of the time as the value.
@@ -200,6 +207,23 @@ public:
 	 */
 	double takeDev(const vector<double>& value, double point, int n);
 
+	/**
+	 * This method calculates the variance of the bond ratio, which is used as the approximated
+	 * value for implied volatility in the estimation of mean reversion using Method 2
+	 * @param T0 the maturity of the swaption
+	 * @param Tn the tenor of the swaption
+	 */
+	double calculateVswap(double T0, double Tn);
+
+	/**
+	 * This method assigns constant mean reversion across all the data points.
+	 */
+	void assignConstantMeanReversion();
+
+	/**
+	 * This method assigns constant volatility across all the data points.
+	 */
+	void assignConstantVol();
 };
 
 #endif /* BASEMODULE_H_ */

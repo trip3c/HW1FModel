@@ -34,8 +34,8 @@ int Module2Appl::moduleMainFunc(){
 		timePos[data.time[i]] = i;
 	}
 
-	assignMeanReversion();
-	assignVol(0);
+	assignConstantMeanReversion();
+	assignConstantVol();
 	calculateEt();
 //	calculateVr(1);
 	vector<double> th = theta();
@@ -49,17 +49,3 @@ int Module2Appl::moduleMainFunc(){
 
 	return 0;
 }
-
-void Module2Appl::assignMeanReversion(){
-	double a = 5.0/100;
-	int x = data.time.size();
-	data.aMeanReversion.assign(x, a);
-}
-
-void Module2Appl::assignVol(double s){
-	double s1 = 70.0/100;
-	int x = data.time.size();
-	data.sigma.assign(x, s1);
-}
-
-
