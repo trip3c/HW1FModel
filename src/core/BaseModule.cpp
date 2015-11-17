@@ -269,3 +269,52 @@ void BaseModule::assignConstantVol(){
 	int x = data.time.size();
 	data.sigma.assign(x, s1);
 }
+
+double BaseModule::meanReversionLogisticFunction(double A0, double A1, double A2, double A3, double ti){
+	return (A0 + (A1-A0)/(1+exp(A2*(A3-ti))));
+}
+
+double BaseModule::impliedVarianceRatios(double maturity, double tenor1, double tenor2){
+	int maturityPos = locate(maturity);
+	int tenorPos1 = locate(tenor1);
+	int tenorPos2 = locate(tenor2);
+	double pM = data.priceD[maturityPos];
+	double pT1 = data.priceD[tenorPos1];
+	double pT2 = data.priceD[tenorPos2];
+	double b1 = calculateB(maturity, tenor1);
+	double b2 = calculateB(maturity, tenor2);
+	double num = (pM-pT2)*b1;
+	double den = (pM-pT1)*b2;
+	return pow((num/den), 2.0);
+}
+
+void BaseModule::initializeAndAssignConstantWeights(){
+	int rows = actualVol.maturity.size();
+	int cols = actualVol.tenor.size();
+	for (int i=0; i<rows; i++){
+		vector<double> rowi (cols, constants.CONSTANT_WEIGHT);
+		actualVol.weights.push_back(rowi);
+	}
+}
+
+void BaseModule::meanReversionCalibrationFunctionF(){
+	int rows = actualVol.maturity.size();
+	int cols = actualVol.tenor.size();
+	vector<vector<double> > func;
+	double funcTotal = 0.0;
+	for (int i=0; i<rows; i++){
+		vector<double> colsMinus1(cols-1);
+		func.push_back(colsMinus1);
+	}
+
+	for (int i=0; i<rows; i++){
+		for (int j=0; j<cols-1; j++){
+			double volRatio = sqrt(impliedVarianceRatios(actualVol.maturity[i], actualVol.tenor[j], actualVol.tenor[j+1]));
+			double weightRatio = actualVol.weights[i][j+1]/actualVol.weights[i][j];
+			double impliedVolRatio = actualVol.vol[i][j+1]/actualVol.vol[i][j];
+			func[i][j] = weightRatio * pow((volRatio-impliedVolRatio),2.0);
+			funcTotal += func[i][j];
+		}
+	}
+}
+

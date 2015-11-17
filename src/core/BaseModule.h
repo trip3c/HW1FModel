@@ -53,11 +53,14 @@ public:
 	 * maturity vectors.
 	 * @param tenor This parameter holds the tenor of swaption
 	 * @param maturity This parameter holds the maturity of swaption
+	 * @param weights This parameter holds the weights for the corresponding swaption
+	 *                calibration
 	 */
 	struct SwaptionVolStruct{
 		vector<vector<double> > vol;
 		vector<double> tenor;
 		vector<double> maturity;
+		vector<vector<double> > weights;
 	};
 
 	/**
@@ -212,6 +215,7 @@ public:
 	 * value for implied volatility in the estimation of mean reversion using Method 2
 	 * @param T0 the maturity of the swaption
 	 * @param Tn the tenor of the swaption
+	 * @return the variance swap
 	 */
 	double calculateVswap(double T0, double Tn);
 
@@ -224,6 +228,34 @@ public:
 	 * This method assigns constant volatility across all the data points.
 	 */
 	void assignConstantVol();
+
+	/**
+	 * This is the logistic function used to generate the mean reversion at time ti
+	 * @param A0 the short term value
+	 * @param A1 the mid/long term value
+	 * @param A2 the slope at the transition
+	 * @param A3 the time at the transition
+	 * @param ti the piecewise time interval
+	 * @return the mean reversion from logistic function
+	 */
+	double meanReversionLogisticFunction(double A0, double A1, double A2, double A3, double ti);
+
+	/**
+	 * This function calculates the variance ratios with same maturity but different
+	 * tenors
+	 * @param maturity the maturity timeperiod
+	 * @param tenor1 the tenor1 timeperiod
+	 * @param tenor2 the tenor2 timeperiod
+	 * @return the implied variance ratios
+	 */
+	double impliedVarianceRatios(double maturity, double tenor1, double tenor2);
+
+	/**
+	 * This method initializes and assigns constant weights to volatility grid
+	 */
+	void initializeAndAssignConstantWeights();
+
+	void meanReversionCalibrationFunctionF();
 };
 
 #endif /* BASEMODULE_H_ */
