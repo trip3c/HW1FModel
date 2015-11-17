@@ -256,6 +256,8 @@ public:
 	void initializeAndAssignConstantWeights();
 
 	void meanReversionCalibrationFunctionF();
+
+	double strikeRateForSwaptionATM(double maturity, double tenor);
 };
 
 #endif /* BASEMODULE_H_ */

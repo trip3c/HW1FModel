@@ -318,3 +318,15 @@ void BaseModule::meanReversionCalibrationFunctionF(){
 	}
 }
 
+double BaseModule::strikeRateForSwaptionATM(double maturity, double tenor){
+	int matPosition = locate(maturity);
+	int tenPosition = locate(tenor);
+	double priceAtMat = data.priceD[matPosition];
+	double priceAtTen = data.priceD[tenPosition];
+	int cashFlows = tenPosition - matPosition;
+	double cashFlowsSum = 0.0;
+	for(int i=matPosition+1; i<=tenPosition; i++){
+		cashFlowsSum += constants.PAYMENT_FREQ*data.priceD[i];
+	}
+	return (data.priceD[matPosition]-data.priceD[tenPosition])/cashFlowsSum;
+}
