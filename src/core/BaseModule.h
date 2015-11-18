@@ -258,6 +258,8 @@ public:
 	void meanReversionCalibrationFunctionF();
 
 	double strikeRateForSwaptionATM(double maturity, double tenor);
+
+	double blackFormula(double K, double F, double v, int w);
 };
 
 #endif /* BASEMODULE_H_ */

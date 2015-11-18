@@ -330,3 +330,7 @@ double BaseModule::strikeRateForSwaptionATM(double maturity, double tenor){
 	}
 	return (data.priceD[matPosition]-data.priceD[tenPosition])/cashFlowsSum;
 }
+
+double BaseModule::blackFormula(double K, double F, double v, int w){
+
+}
