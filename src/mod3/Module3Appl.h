@@ -5,8 +5,8 @@
  *      Author: Chandra
  */
 
-#include "..\core\BaseModule.h"
-#include "..\core\ModuleHelper.h"
+#include "core/BaseModule.h"
+#include "core/ModuleHelper.h"
 
 #ifndef MODULE3APPL_H_
 #define MODULE3APPL_H_

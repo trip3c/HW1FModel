@@ -15,7 +15,7 @@
 #include <sstream>
 #include <iterator>
 
-#include "../core/spline.h"
+#include "core/spline.h"
 #include "ModuleHelper.h"
 
 #include <stdio.h>  /* defines FILENAME_MAX */

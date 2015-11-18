@@ -10,7 +10,7 @@
 #include <cassert>
 #include <math.h>
 #include <iomanip>
-#include "../core/spline.h"
+#include "core/spline.h"
 
 #include "Module3Appl.h"
 

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 #include "ApplicationHullWhite.h"
-#include "..\mod1\Module1Appl.h"
-#include "..\mod2\Module2Appl.h"
-#include "..\mod3\Module3Appl.h"
+#include "mod1/Module1Appl.h"
+#include "mod2/Module2Appl.h"
+#include "mod3/Module3Appl.h"
 
 using namespace std;
 

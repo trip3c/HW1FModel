@@ -6,7 +6,7 @@
 // Description : Hull White One Factor Calibration
 //============================================================================
 
-#include "appl\ApplicationHullWhite.h"
+#include "appl/ApplicationHullWhite.h"
 
 int main(int argc, char * argv[]){
 	ApplicationHullWhite app("E:\\work\\cpp_ws\\");
