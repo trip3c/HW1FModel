@@ -46,22 +46,26 @@ int Module3Appl::moduleMainFunc(){
 	double T = 0.0;
 	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
 	cout << "sigma\t" << *(data.sigma.begin())<<endl;
-	cout << "Maturity\\Tenor\t" ;
-	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
-		cout << *it_ten << "\t";
-	}
-	cout << endl;
-	for(vector<double>::iterator it_mat = actualVol.maturity.begin(); it_mat!=actualVol.maturity.end(); ++it_mat){
-		cout << *it_mat << "\t";
-		for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
+//	cout << "Maturity\\Tenor\t" ;
+//	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
+//		cout << *it_ten << "\t";
+//	}
+//	cout << endl;
+//	for(vector<double>::iterator it_mat = actualVol.maturity.begin(); it_mat!=actualVol.maturity.end(); ++it_mat){
+//		cout << *it_mat << "\t";
+//		for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
+//
+//			t = *it_mat;
+//			T = *it_ten + t;
+//			double implVol = sqrt(calculateVswap(t, T));
+//			cout << implVol << "\t";
+//		}
+//		cout << endl;
+//	}
 
-			t = *it_mat;
-			T = *it_ten + t;
-			double implVol = sqrt(calculateVswap(t, T));
-			cout << implVol << "\t";
-		}
-		cout << endl;
-	}
+	initializeAndAssignConstantWeights();
+	meanReversionCalibrationFunctionF();
+
 	return 0;
 }
 

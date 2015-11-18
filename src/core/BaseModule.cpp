@@ -41,10 +41,11 @@ double BaseModule::calculateB(double t, double T){
     for (int i = position_t+1; i <= position_T; i++){
         summation = summation + (data.time[i] - data.time[i-1]) / data.Et[i];
     }
-    if(t){
+//    if(t){ //TODO Xiaohan to validate - Chandra
+    if(position_t){
         summation = summation * data.Et[position_t];
     }
-//    cout << "calculateB = " << summation << endl;
+    FILE_LOG(logDEBUG) << "calculateB = " << summation <<"\tposition_t=\t"<<position_t << "\tposition_T=\t" << position_T ;
     return summation;
 }
 
@@ -72,14 +73,14 @@ double BaseModule::calculateVr(double t){
         Vr += pow(data.Et[i], 2) * pow(data.sigma[i], 2) * (data.time[i] - data.time[i-1]);
     }
     Vr = Vr / pow(data.Et[position_t], 2);
-//    cout << "calculateVr = \t" << Vr << endl;
+    FILE_LOG(logDEBUG) << "calculateVr = \t" << Vr ;
     return Vr;
 }
 
 double BaseModule::calculateVp(double Tf, double Tp){
     //Vp always have t=0 in our Problem
 	double t = calculateVr(Tf) * pow(calculateB(Tf, Tp), 2);
-//	cout << "calculateVp = " << t << endl;
+	FILE_LOG(logDEBUG) << "calculateVp = " << t ;
     return t;
 }
 
@@ -96,7 +97,7 @@ double BaseModule::calculateA(double t, double T){
     double y = valB * data.forward[position_t+1];
     double z = 0.5 * pow(valB, 2) * calculateVr(t);
     double t1 = x + y - z;
-//    cout << "calculateA = " << x << "+" << y << "-" << z << "=" << t1 << endl;
+    FILE_LOG(logDEBUG) << "calculateA = " << x << "+" << y << "-" << z << "=" << t1 ;
     return t1;
 }
 
@@ -184,7 +185,7 @@ double BaseModule::pSwaption(double strike, double T0, double Tp){
         price += ci[i] * ZBP(T0, Ti[i], Xi[i]);
         FILE_LOG(logDEBUG) << " Xi=" << Xi[i] << " price=" << price;
     }
-//    cout << "FinalPrice=" <<"\t"<< price << "\t "<< T0 << " \t" << Tp << endl;
+    FILE_LOG(logDEBUG) << "FinalPrice=" <<"\t"<< price << "\t "<< T0 << " \t" << Tp ;
     return price;
 }
 
@@ -221,37 +222,6 @@ vector<double> BaseModule::theta(){
     }
     return theta_vec;
 }
-//
-//double interval_bisection(double y_target,  // Target y value
-//                          double m,         // Left interval value
-//                          double n,         // Right interval value
-//                          double epsilon,   // Tolerance
-//                          T g) {            // Function object of type T, named g
-//
-//  // Create the initial x mid-point value
-//  // Find the mapped y value of g(x)
-//  double x = 0.5 * (m + n);
-//  double y = g(x);
-//
-//  // While the difference between y and the y_target
-//  // value is greater than epsilon, keep subdividing
-//  // the interval into successively smaller halves
-//  // and re-evaluate the new y.
-//  do {
-//    if (y < y_target) {
-//      m = x;
-//    }
-//
-//    if (y > y_target) {
-//      n = x;
-//    }
-//
-//    x = 0.5 * (m + n);
-//    y = g(x);
-//  } while (fabs(y-y_target) > epsilon);
-//
-//  return x;
-//}
 
 double BaseModule::calculateVswap(double T0, double Tn){
 	double value=0.0;
@@ -260,8 +230,8 @@ double BaseModule::calculateVswap(double T0, double Tn){
 	double priceTn = data.priceD[locate(Tn)];
 	double val2 = pow((priceT0/(priceT0 - priceTn)),2.0);
 	value = Vp * val2;
-//	cout << "Vswap\t" << value << "\t" << priceT0 << "\t"
-//			<< priceTn << "\tImplVol\t" << sqrt(value) << endl;
+	FILE_LOG(logDEBUG) << "Vswap=\t" << value << "\tPriceT0=\t" << priceT0 << "\tPriceTn=\t" <<
+			priceTn << "\tVp=\t" << Vp << "\tVswap=\t" << value;
 	return value;
 }
 
@@ -293,7 +263,11 @@ double BaseModule::impliedVarianceRatios(double maturity, double tenor1, double 
 	double b2 = calculateB(maturity, tenor2);
 	double num = (pM-pT2)*b1;
 	double den = (pM-pT1)*b2;
-	return pow((num/den), 2.0);
+	double value = pow((num/den), 2.0);
+	FILE_LOG(logDEBUG) << "ImplVarianceRatio=\t" <<"Mat=\t"<<maturity<<"\ttenor1=\t"<<tenor1<<"\ttenor2=\t"
+			<<tenor2<< "\tpM=\t" <<pM<<"\tpT1=\t" <<pT1 <<"\tpT2=\t"
+			<<pT2<< "\tb1=\t" <<b1 <<"\tb2="<< b2<<"\tnum=\t" << num << "\tden=\t" << den << "\t" << value;
+	return value;
 }
 
 void BaseModule::initializeAndAssignConstantWeights(){
@@ -318,11 +292,16 @@ void BaseModule::meanReversionCalibrationFunctionF(){
 	for (int i=0; i<rows; i++){
 		for (int j=0; j<cols-1; j++){
 			if (actualVol.weights[i][j] != 0.0){
+				double tenor1 = actualVol.tenor[j]+actualVol.maturity[i];
+				double tenor2 = actualVol.tenor[j+1]+actualVol.maturity[i];
 				double weightRatio = actualVol.weights[i][j+1]/actualVol.weights[i][j];
-				double volRatio = sqrt(impliedVarianceRatios(actualVol.maturity[i], actualVol.tenor[j], actualVol.tenor[j+1]));
+				double volRatio = sqrt(impliedVarianceRatios(actualVol.maturity[i], tenor1, tenor2));
 				double impliedVolRatio = actualVol.vol[i][j+1]/actualVol.vol[i][j];
 				func[i][j] = weightRatio * pow((volRatio-impliedVolRatio),2.0);
 				funcTotal += func[i][j];
+				FILE_LOG(logDEBUG) << "MeanReversionM2[" << i << "][" << j <<"]" <<"\t" << "weightRatio=\t" << weightRatio
+						<< "\tVswapRatio=\t" << volRatio << "\tImplVolRatio=\t" << impliedVolRatio << "\tFunc=\t"
+						<< func[i][j] << "\tFuncTotal=" << funcTotal;
 			}
 		}
 	}
