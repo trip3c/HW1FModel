@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <map>
+//#include "Logger.h"
 #include "Constants.h"
 
 using namespace std;
@@ -62,6 +63,10 @@ public:
 		vector<double> maturity;
 		vector<vector<double> > weights;
 	};
+
+//	Logger& logger = Logger::getLogger();
+//	Logger& logger;
+//	Logger logg;
 
 	/**
 	 * The constructor of the base module class
@@ -260,6 +265,7 @@ public:
 	double strikeRateForSwaptionATM(double maturity, double tenor);
 
 	double blackFormula(double K, double F, double v, int w);
+
 };
 
 #endif /* BASEMODULE_H_ */

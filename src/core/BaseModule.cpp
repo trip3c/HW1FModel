@@ -7,17 +7,22 @@
 #include <cassert>
 #include <iostream>
 #include <math.h>
+//#include <fstream>
 #include "BaseModule.h"
 #include "spline.h"
 #include "Constants.h"
+#include "log.h"
 
 BaseModule::BaseModule() {
 	// TODO Auto-generated constructor stub
-
+//	logger = Logger::getLogger();
+//	logg = Logger::getLogger();
 }
 
 BaseModule::~BaseModule() {
 	// TODO Auto-generated destructor stub
+//	getLo.close();
+//	logg.close();
 }
 
 
@@ -152,7 +157,7 @@ double BaseModule::solveR(const vector<double>& c, const vector<double>& A, cons
     return r;
 }
 
-double BaseModule::pSwaption(double K, double T0, double Tp){
+double BaseModule::pSwaption(double strike, double T0, double Tp){
     int position_T0 = locate(T0);
     int position_Tp = locate(Tp);
     int cashFlowTimes = position_Tp-position_T0;
@@ -162,19 +167,22 @@ double BaseModule::pSwaption(double K, double T0, double Tp){
     vector<double> Bi(cashFlowTimes);
     for(int i = 0; i < cashFlowTimes; ++i){
         Ti[i] = data.time[position_T0 + i + 1];
-        ci[i] = K * (Ti[i] - data.time[position_T0 + i]);
+        ci[i] = strike * (Ti[i] - data.time[position_T0 + i]);
         Ai[i]=calculateA(T0, Ti[i]);
         Bi[i]=calculateB(T0, Ti[i]);
-//        cout << "Ai=" << Ai[i] << " Bi=" << Bi[i] << " ci=" << ci[i] << " Ti=" << Ti[i] << endl;
+        FILE_LOG(logDEBUG) << "Ai=" << Ai[i] << " Bi=" << Bi[i] << " ci=" << ci[i] << " Ti=" << Ti[i] << " time=" << data.time[position_T0 + i] << " strike=" << strike;
     }
     ci.back() += 1;
     double r_star = solveR(ci, Ai, Bi);
     vector<double> Xi(cashFlowTimes);
     double price = 0;
+    double zbprice = 0.0;
     for(int i = 0; i < cashFlowTimes; ++i){
+    	zbprice = ZBP(T0, Ti[i], Xi[i]);
+    	FILE_LOG(logDEBUG) << "Ai=" << Ai[i] << " Bi=" << Bi[i] << " ci=" << ci[i] << " r_star=" << r_star << " ZBP=" << zbprice ;
         Xi[i] = exp(Ai[i] - Bi[i] * r_star);
         price += ci[i] * ZBP(T0, Ti[i], Xi[i]);
-//        cout << "Xi=" << Xi[i] << " price=" << price <<endl;
+        FILE_LOG(logDEBUG) << " Xi=" << Xi[i] << " price=" << price;
     }
 //    cout << "FinalPrice=" <<"\t"<< price << "\t "<< T0 << " \t" << Tp << endl;
     return price;
@@ -309,11 +317,13 @@ void BaseModule::meanReversionCalibrationFunctionF(){
 
 	for (int i=0; i<rows; i++){
 		for (int j=0; j<cols-1; j++){
-			double volRatio = sqrt(impliedVarianceRatios(actualVol.maturity[i], actualVol.tenor[j], actualVol.tenor[j+1]));
-			double weightRatio = actualVol.weights[i][j+1]/actualVol.weights[i][j];
-			double impliedVolRatio = actualVol.vol[i][j+1]/actualVol.vol[i][j];
-			func[i][j] = weightRatio * pow((volRatio-impliedVolRatio),2.0);
-			funcTotal += func[i][j];
+			if (actualVol.weights[i][j] != 0.0){
+				double weightRatio = actualVol.weights[i][j+1]/actualVol.weights[i][j];
+				double volRatio = sqrt(impliedVarianceRatios(actualVol.maturity[i], actualVol.tenor[j], actualVol.tenor[j+1]));
+				double impliedVolRatio = actualVol.vol[i][j+1]/actualVol.vol[i][j];
+				func[i][j] = weightRatio * pow((volRatio-impliedVolRatio),2.0);
+				funcTotal += func[i][j];
+			}
 		}
 	}
 }

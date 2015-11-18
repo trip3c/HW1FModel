@@ -4,6 +4,7 @@
 #include "mod1/Module1Appl.h"
 #include "mod2/Module2Appl.h"
 #include "mod3/Module3Appl.h"
+#include "core/log.h"
 
 using namespace std;
 
@@ -17,6 +18,7 @@ ApplicationHullWhite::ApplicationHullWhite(string sDefPath){
 
 int ApplicationHullWhite::moduleChooserFunc(){
 	cout << defPath << endl;
+    FILE_LOG(logDEBUG) << "Testing logger " << 12 << " iterations";
 
 	char choice;
 	cout << "Choose Module to execute: " << endl;

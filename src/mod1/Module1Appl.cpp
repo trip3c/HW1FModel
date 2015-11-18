@@ -47,7 +47,7 @@ int Module1Appl::moduleMainFunc(){
 
 	double t = 0.0;
 	double T = 0.0;
-	double K = constants.FIXED_STRIKE;
+	double strike = constants.FIXED_STRIKE;
 	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
 	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 	cout << "Maturity\\Tenor\t" ;
@@ -61,10 +61,11 @@ int Module1Appl::moduleMainFunc(){
 
 			t = *it_mat;
 			T = *it_ten + t;
-			double price = pSwaption(K, t, T);
+			double price = pSwaption(strike, t, T);
 			cout << price << "\t";
 		}
 		cout << endl;
 	}
+//	cout << pSwaption(strike, 10, 20);
 	return 0;
 }
