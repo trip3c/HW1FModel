@@ -313,9 +313,10 @@ double BaseModule::meanReversionCalibrationFunctionF(){
 				double impliedVolRatio = actualVol.vol[i][j+1]/actualVol.vol[i][j];
 				func[i][j] = weightRatio * pow((volRatio-impliedVolRatio),2.0);
 				funcTotal += func[i][j];
-				FILE_LOG(logDEBUG) << "MeanReversionM2[" << i << "][" << j <<"]" <<"\t" << "weightRatio=\t" << weightRatio
-						<< "\tVswapRatio=\t" << volRatio << "\tImplVolRatio=\t" << impliedVolRatio << "\tFunc=\t"
-						<< func[i][j] << "\tFuncTotal=\t" << funcTotal;
+				FILE_LOG(logDEBUG) << "MeanReversionM2[" << i << "][" << j <<"]" <<"\t" << "Mat" << "\t" << actualVol.maturity[i] << "\t"
+						<< "Ten1" << "\t" << actualVol.tenor[j] << "\t"  << "Ten2" << "\t" << actualVol.tenor[j+1] << "\t"
+						<< "weightRatio=\t" << weightRatio << "\tVswapRatio=\t" << volRatio << "\tImplVolRatio=\t"
+						<< impliedVolRatio << "\tFunc=\t" << func[i][j] << "\tFuncTotal=\t" << funcTotal;
 			}
 		}
 	}
@@ -343,7 +344,7 @@ void BaseModule::simulatedAnnealingFunc(int calibMethod){
 //	double x0 = 0.02;
 //	double xmin = 0.00;
 //	double xmax = 0.5;
-	double A0_0 = -0.01, A1_0 = 0.1, A2_0 = 0.5; //equivalent to x=A0, A1, A2
+	double A0_0 = 0.01, A1_0 = 0.04, A2_0 = 0.5; //equivalent to x=A0, A1, A2
 	double sd0_0= 1, sd1_0=1, sd2_0=0.05;
 	double A1minusA0 = A1_0 - A0_0;
 	double A1minusA0MinTolerance = 0.75*A1minusA0;
@@ -352,7 +353,7 @@ void BaseModule::simulatedAnnealingFunc(int calibMethod){
 		assignVaryingMeanReversion(A0_0, A1_0, A2_0, 0.0);
 		double fLast = meanReversionCalibrationFunctionF();
 
-		double gamma = 5.0;
+		double gamma = 7.0;
 //		double sd0 = 1.5;
 		int totalNoOfSimulation = 100;
 		int iterationNo = 1;
@@ -370,6 +371,7 @@ void BaseModule::simulatedAnnealingFunc(int calibMethod){
 		double A3=0;
 		double aVal;
 		int counter = 0;
+		double minFx = fLast;
 
 		boost::mt19937 *rng2 = new boost::mt19937();
 		rng2->seed(time(NULL));
@@ -406,10 +408,12 @@ void BaseModule::simulatedAnnealingFunc(int calibMethod){
 			fxVector.push_back(fx);
 			fLast = fx;
 			++iterationNo;
+			minFx = min(minFx, fx);
 //			aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
 
 			FILE_LOG(logDEBUG) << "SimulatedAnn-Final\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << fx;
 		}while(iterationNo < totalNoOfSimulation);
+		FILE_LOG(logDEBUG) << "SimulatedAnn-Min-Fx\t" << minFx;
 }
 
 void BaseModule::assignVaryingMeanReversion(double A0, double A1, double A2, double A3){
