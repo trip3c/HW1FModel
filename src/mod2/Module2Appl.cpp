@@ -11,6 +11,7 @@
 #include <math.h>
 #include <iomanip>
 #include "core/spline.h"
+#include "core/Constants.h"
 
 #include "Module2Appl.h"
 
@@ -34,8 +35,8 @@ int Module2Appl::moduleMainFunc(){
 		timePos[data.time[i]] = i;
 	}
 
-	assignConstantMeanReversion();
-	assignConstantVol();
+	assignConstantMeanReversion(Constants::FIXED_MEAN_REVERSION);
+	assignConstantVol(Constants::FIXED_VOLATILITY);
 	calculateEt();
 //	calculateVr(1);
 	vector<double> th = theta();

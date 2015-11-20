@@ -11,7 +11,7 @@
 #include <math.h>
 #include <iomanip>
 #include "core/spline.h"
-
+#include "core/Constants.h"
 #include "Module3Appl.h"
 
 using namespace std;
@@ -38,8 +38,8 @@ int Module3Appl::moduleMainFunc(){
 		timePos[data.time[i]] = i;
 	}
 
-	assignConstantMeanReversion();
-	assignConstantVol();
+	assignConstantMeanReversion(Constants::FIXED_MEAN_REVERSION);
+	assignConstantVol(Constants::FIXED_VOLATILITY);
 	calculateEt();
 
 	double t = 0.0;
@@ -64,7 +64,8 @@ int Module3Appl::moduleMainFunc(){
 //	}
 
 	initializeAndAssignConstantWeights();
-	meanReversionCalibrationFunctionF();
+//	meanReversionCalibrationFunctionF();
+	simulatedAnnealingFunc(1);
 
 	return 0;
 }

@@ -20,7 +20,7 @@ vector<double> r8vec_normal_01_new ( int n, int seed );
 vector<double> r8vec_uniform_01_new ( int n, int seed );
 
 //****************************************************************************80
-
+// http://people.sc.fsu.edu/~jburkardt/cpp_src/normal_dataset/normal_dataset.html
 
 
 vector <double> multinormal_sample ( int m, int n, const vector<double> a, const vector<double>  mu, int seed )

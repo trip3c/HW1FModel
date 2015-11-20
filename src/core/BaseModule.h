@@ -9,6 +9,7 @@
 #include <map>
 //#include "Logger.h"
 #include "Constants.h"
+#include <random>
 
 using namespace std;
 
@@ -62,6 +63,11 @@ public:
 		vector<double> tenor;
 		vector<double> maturity;
 		vector<vector<double> > weights;
+	};
+
+	enum CalibrationTechnique {
+		CALIBRATE_MEAN_REVERSION = 2,
+		CALIBRATE_NOTHING = 100
 	};
 
 //	Logger& logger = Logger::getLogger();
@@ -227,12 +233,12 @@ public:
 	/**
 	 * This method assigns constant mean reversion across all the data points.
 	 */
-	void assignConstantMeanReversion();
+	void assignConstantMeanReversion(double val);
 
 	/**
 	 * This method assigns constant volatility across all the data points.
 	 */
-	void assignConstantVol();
+	void assignConstantVol(double val);
 
 	/**
 	 * This is the logistic function used to generate the mean reversion at time ti
@@ -260,11 +266,17 @@ public:
 	 */
 	void initializeAndAssignConstantWeights();
 
-	void meanReversionCalibrationFunctionF();
+	double meanReversionCalibrationFunctionF();
 
 	double strikeRateForSwaptionATM(double maturity, double tenor);
 
 	double blackFormula(double K, double F, double v, int w);
+
+	void simulatedAnnealingFunc(int cal);
+
+	double coolingMechanism(double gamma, double sigma0, int totalNoOfSimulation, int iterationNo);
+
+	std::mt19937 get_prng();
 
 };
 

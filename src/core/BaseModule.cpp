@@ -7,11 +7,25 @@
 #include <cassert>
 #include <iostream>
 #include <math.h>
+#include <random>
+#include <time.h>
+#include <chrono>
 //#include <fstream>
 #include "BaseModule.h"
 #include "spline.h"
 #include "Constants.h"
 #include "log.h"
+#include <time.h>
+#include <boost/math/distributions/normal.hpp> // for normal_distribution
+  using boost::math::normal; // typedef provides default type is double.
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/variate_generator.hpp>
+  using boost::variate_generator;
+#include <boost/random.hpp>
+
+
+void main1(void);
+
 
 BaseModule::BaseModule() {
 	// TODO Auto-generated constructor stub
@@ -236,16 +250,16 @@ double BaseModule::calculateVswap(double T0, double Tn){
 }
 
 
-void BaseModule::assignConstantMeanReversion(){
-	double a = constants.FIXED_MEAN_REVERSION;
+void BaseModule::assignConstantMeanReversion(double val){
+//	double a = constants.FIXED_MEAN_REVERSION;
 	int x = data.time.size();
-	data.aMeanReversion.assign(x, a);
+	data.aMeanReversion.assign(x, val);
 }
 
-void BaseModule::assignConstantVol(){
-	double s1 = constants.FIXED_VOLATILITY;
+void BaseModule::assignConstantVol(double val){
+//	double s1 = constants.FIXED_VOLATILITY;
 	int x = data.time.size();
-	data.sigma.assign(x, s1);
+	data.sigma.assign(x, val);
 }
 
 double BaseModule::meanReversionLogisticFunction(double A0, double A1, double A2, double A3, double ti){
@@ -279,7 +293,7 @@ void BaseModule::initializeAndAssignConstantWeights(){
 	}
 }
 
-void BaseModule::meanReversionCalibrationFunctionF(){
+double BaseModule::meanReversionCalibrationFunctionF(){
 	int rows = actualVol.maturity.size();
 	int cols = actualVol.tenor.size();
 	vector<vector<double> > func;
@@ -301,10 +315,11 @@ void BaseModule::meanReversionCalibrationFunctionF(){
 				funcTotal += func[i][j];
 				FILE_LOG(logDEBUG) << "MeanReversionM2[" << i << "][" << j <<"]" <<"\t" << "weightRatio=\t" << weightRatio
 						<< "\tVswapRatio=\t" << volRatio << "\tImplVolRatio=\t" << impliedVolRatio << "\tFunc=\t"
-						<< func[i][j] << "\tFuncTotal=" << funcTotal;
+						<< func[i][j] << "\tFuncTotal=\t" << funcTotal;
 			}
 		}
 	}
+	return funcTotal;
 }
 
 double BaseModule::strikeRateForSwaptionATM(double maturity, double tenor){
@@ -322,4 +337,108 @@ double BaseModule::strikeRateForSwaptionATM(double maturity, double tenor){
 
 double BaseModule::blackFormula(double K, double F, double v, int w){
 
+}
+
+void BaseModule::simulatedAnnealingFunc(int calibMethod){
+	double x0 = 0.02;
+	double xmin = 0.00;
+	double xmax = 0.5;
+
+		assignConstantMeanReversion(x0);
+		double fr = meanReversionCalibrationFunctionF();
+
+		double gamma = 5.0;
+		double sigma0 = 1.5;
+		int totalNoOfSimulation = 100;
+		int iterationNo = 1;
+		vector<double> fxVector, xrVector, sigmajVector;
+		fxVector.push_back(fr);
+		xrVector.push_back(x0);
+		sigmajVector.push_back(sigma0);
+		double xr = x0;
+		double x = x0;
+		double fx;
+		boost::mt19937 *rng2 = new boost::mt19937();
+		rng2->seed(time(NULL));
+		// http://stackoverflow.com/questions/15747194/why-is-boosts-random-number-generation-on-a-normal-distribution-always-giving
+
+
+		FILE_LOG(logINFO) << x0 << "\t" << sigma0 ;
+		do {
+
+			double sigmaj = coolingMechanism(gamma, sigma0, totalNoOfSimulation, iterationNo);
+			normal_distribution<> distribution(x, sigmaj);
+			variate_generator<boost::mt19937&, normal_distribution<> > generate_next(*rng2, distribution);
+			x = generate_next();
+			while (!(x > xmin && x < xmax)){
+				x = generate_next();
+			}
+
+			FILE_LOG(logINFO) << x << "\t" << sigmaj ;
+			++iterationNo;
+		}while(iterationNo < totalNoOfSimulation);
+}
+
+double BaseModule::coolingMechanism(double gamma, double sigma0, int totalNoOfSimulation, int iterationNo){
+	return sigma0 * exp(-gamma*iterationNo/(totalNoOfSimulation-1));
+}
+
+std::mt19937 BaseModule::get_prng() {
+//    std::uint_least32_t seed_data[std::mt19937::state_size];
+//    std::random_device r;
+//    std::generate_n(seed_data, std::mt19937::state_size, std::ref(r));
+//    std::seed_seq q(std::begin(seed_data), std::end(seed_data));
+//    return std::mt19937{q};
+}
+
+template<class T>
+T gen_normal_4(T generator,
+            std::vector<double> &res)
+{
+  for(size_t i=0; i<res.size(); ++i)
+    res[i]=generator();
+  // Note the generator is returned back
+  return  generator;
+}
+
+//void main1(void)
+//{
+////  boost::variate_generator<boost::mt19937, boost::normal_distribution<> >
+////    generator(boost::mt19937(time(0)),
+////              boost::normal_distribution<>());
+////
+////  std::vector<double> res(10);
+////  // Assigning back to the generator ensures the state is advanced
+////  generator=gen_normal_4(generator, res);
+////
+////  for(size_t i=0; i<10; ++i)
+////    std::cout<<res[i]
+////             <<std::endl;
+////
+////  generator=gen_normal_4(generator, res);
+////
+////  for(size_t i=0; i<10; ++i)
+////    std::cout<<res[i]
+////             <<std::endl;
+//
+//    // Construct a standard normal distribution s
+//      normal s; // (default mean = zero, and standard deviation = unity)
+//      cout << "Standard normal distribution, mean = "<< s.mean()
+//        << ", standard deviation = " << s.standard_deviation() << endl;
+//
+//}
+
+void main1(void)
+{
+	boost::mt19937 *rng2 = new boost::mt19937();
+	rng2->seed(time(NULL));
+
+	normal_distribution<> distribution(0, 1);
+	variate_generator<boost::mt19937&, normal_distribution<> > resampler(*rng2, distribution);
+//	boost::variate_generator< boost::mt19937, boost::normal_distribution<> > resampler(*rng2, distribution);
+//
+	for (int i = 0; i < 10; ++i)
+	{
+		cout << resampler() << endl ;
+	}
 }
