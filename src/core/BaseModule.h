@@ -278,6 +278,14 @@ public:
 
 	std::mt19937 get_prng();
 
+	void simulatedAnnealingFunc1(int cal);
+
+	void simulatedAnnealingFunc2(int cal);
+
+	double logisticFunc(double A0, double A1, double A2, double A3, double ti);
+
+	void assignVaryingMeanReversion(double A0, double A1, double A2, double A3);
+
 };
 
 #endif /* BASEMODULE_H_ */

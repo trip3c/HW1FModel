@@ -11,7 +11,7 @@
 
 int main(int argc, char * argv[]){
 	ApplicationHullWhite app("E:\\work\\cpp_ws\\");
-	FILELog::ReportingLevel() = FILELog::FromString(argv[1] ? argv[1] : "INFO");
+	FILELog::ReportingLevel() = FILELog::FromString(argv[1] ? argv[1] : "DEBUG");
 	FILE* log_fd = fopen( "output.txt", "w" );
 	Output2FILE::Stream() = log_fd;
 	app.moduleChooserFunc();

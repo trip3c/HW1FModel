@@ -340,6 +340,158 @@ double BaseModule::blackFormula(double K, double F, double v, int w){
 }
 
 void BaseModule::simulatedAnnealingFunc(int calibMethod){
+//	double x0 = 0.02;
+//	double xmin = 0.00;
+//	double xmax = 0.5;
+	double A0_0 = -0.01, A1_0 = 0.1, A2_0 = 0.5; //equivalent to x=A0, A1, A2
+	double sd0_0= 1, sd1_0=1, sd2_0=0.05;
+	double A1minusA0 = A1_0 - A0_0;
+	double A1minusA0MinTolerance = 0.75*A1minusA0;
+	double A1minusA0MaxTolerance = 1.25*A1minusA0;
+
+		assignVaryingMeanReversion(A0_0, A1_0, A2_0, 0.0);
+		double fLast = meanReversionCalibrationFunctionF();
+
+		double gamma = 5.0;
+//		double sd0 = 1.5;
+		int totalNoOfSimulation = 100;
+		int iterationNo = 1;
+		vector<double> fxVector, xrVector, sigmajVector;
+		fxVector.push_back(fLast);
+//		xrVector.push_back(x0);
+//		sigmajVector.push_back(sd0);
+//		double xr = x0;
+//		double x = x0;
+//		double xlast = x0;
+		double fx = fLast;
+		double A0r = A0_0, A1r=A1_0, A2r=A2_0;
+		double A0 = A0_0, A1=A1_0, A2=A2_0;
+		double A0last = A0_0, A1last=A1_0, A2last=A2_0;
+		double A3=0;
+		double aVal;
+		int counter = 0;
+
+		boost::mt19937 *rng2 = new boost::mt19937();
+		rng2->seed(time(NULL));
+		// http://stackoverflow.com/questions/15747194/why-is-boosts-random-number-generation-on-a-normal-distribution-always-giving
+
+//		aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
+		FILE_LOG(logDEBUG) << "SimulatedAnn-Final\t" << iterationNo << "\t" << A0_0 << "\t" << sd0_0 << "\t" << A1_0 << "\t" << sd1_0 << "\t" << A2_0 << "\t" << sd2_0 << "\t" << 0 << "\t" << fLast;
+		do {
+			double sd0j = coolingMechanism(gamma, sd0_0, totalNoOfSimulation, iterationNo);
+			normal_distribution<> distribution0(A0, sd0j);
+			variate_generator<boost::mt19937&, normal_distribution<> > generate_next0(*rng2, distribution0);
+
+			double sd1j = coolingMechanism(gamma, sd1_0, totalNoOfSimulation, iterationNo);
+			normal_distribution<> distribution1(A1, sd1j);
+			variate_generator<boost::mt19937&, normal_distribution<> > generate_next1(*rng2, distribution1);
+
+			double sd2j = coolingMechanism(gamma, sd2_0, totalNoOfSimulation, iterationNo);
+			normal_distribution<> distribution2(A2, sd2j);
+			variate_generator<boost::mt19937&, normal_distribution<> > generate_next2(*rng2, distribution2);
+
+			counter = 0;
+			do{
+				A0 = generate_next0();
+				A1 = generate_next1();
+				A2 = generate_next2();
+//			}while((A1-A0)>A1minusA0MinTolerance && (A1-A0)<A1minusA0MaxTolerance && (A1>A0));
+				if(A0<A1){
+					assignVaryingMeanReversion(A0, A1, A2, 0);
+					fx = meanReversionCalibrationFunctionF();
+					FILE_LOG(logDEBUG) << "SimulatedAnn-Counter\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << fx;
+					++counter;
+				}
+			}while(fx>=fLast && counter<(int)round(100/iterationNo));
+			fxVector.push_back(fx);
+			fLast = fx;
+			++iterationNo;
+//			aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
+
+			FILE_LOG(logDEBUG) << "SimulatedAnn-Final\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << fx;
+		}while(iterationNo < totalNoOfSimulation);
+}
+
+void BaseModule::assignVaryingMeanReversion(double A0, double A1, double A2, double A3){
+	A3 = *(data.time.end());
+	for(vector<double>::iterator it = data.time.begin(), it1 = data.aMeanReversion.begin(); it!=data.time.end(); ++it, ++it1){
+		double old = *it1;
+		*it1 = logisticFunc(A0, A1, A2, A3, *it);
+	}
+	for(vector<double>::iterator it = data.time.begin(), it1 = data.aMeanReversion.begin(); it!=data.time.end(); ++it, ++it1){
+		FILE_LOG(logDEBUG) << "VaryingMeanRev\t" << *it << "\t" << *it1 ;
+	}
+	calculateEt();
+}
+
+void BaseModule::simulatedAnnealingFunc2(int calibMethod){
+//	double x0 = 0.02;
+//	double xmin = 0.00;
+//	double xmax = 0.5;
+	double A0_0 = -0.01, A1_0 = 0.1, A2_0 = 0.5; //equivalent to x=A0, A1, A2
+	double sd0_0= 1, sd1_0=1, sd2_0=0.05;
+	double A1minusA0 = A1_0 - A0_0;
+	double A1minusA0MinTolerance = 0.75*A1minusA0;
+	double A1minusA0MaxTolerance = 1.25*A1minusA0;
+
+//		assignConstantMeanReversion(x0);
+//		double fr = meanReversionCalibrationFunctionF();
+
+		double gamma = 5.0;
+//		double sd0 = 1.5;
+		int totalNoOfSimulation = 100;
+		int iterationNo = 1;
+		vector<double> fxVector, xrVector, sigmajVector;
+//		fxVector.push_back(fr);
+//		xrVector.push_back(x0);
+//		sigmajVector.push_back(sd0);
+//		double xr = x0;
+//		double x = x0;
+//		double xlast = x0;
+//		double fx;
+		double A0r = A0_0, A1r=A1_0, A2r=A2_0;
+		double A0 = A0_0, A1=A1_0, A2=A2_0;
+		double A0last = A0_0, A1last=A1_0, A2last=A2_0;
+		double A3=100;
+		double aVal;
+
+		boost::mt19937 *rng2 = new boost::mt19937();
+		rng2->seed(time(NULL));
+		// http://stackoverflow.com/questions/15747194/why-is-boosts-random-number-generation-on-a-normal-distribution-always-giving
+
+		aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
+		FILE_LOG(logINFO) << iterationNo << "\t" << A0_0 << "\t" << sd0_0 << "\t" << A1_0 << "\t" << sd1_0 << "\t" << A2_0 << "\t" << sd2_0 << "\t" << aVal;
+		do {
+			double sd0j = coolingMechanism(gamma, sd0_0, totalNoOfSimulation, iterationNo);
+			normal_distribution<> distribution0(A0, sd0j);
+			variate_generator<boost::mt19937&, normal_distribution<> > generate_next0(*rng2, distribution0);
+
+			double sd1j = coolingMechanism(gamma, sd1_0, totalNoOfSimulation, iterationNo);
+			normal_distribution<> distribution1(A1, sd1j);
+			variate_generator<boost::mt19937&, normal_distribution<> > generate_next1(*rng2, distribution1);
+
+			double sd2j = coolingMechanism(gamma, sd2_0, totalNoOfSimulation, iterationNo);
+			normal_distribution<> distribution2(A2, sd2j);
+			variate_generator<boost::mt19937&, normal_distribution<> > generate_next2(*rng2, distribution2);
+
+			do{
+				A0 = generate_next0();
+				A1 = generate_next1();
+				A2 = generate_next2();
+			}while((A1-A0)>A1minusA0MinTolerance && (A1-A0)<A1minusA0MaxTolerance && (A1>A0));
+
+			++iterationNo;
+			aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
+
+			FILE_LOG(logINFO) << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << aVal;
+		}while(iterationNo < totalNoOfSimulation);
+}
+
+double BaseModule::logisticFunc(double A0, double A1, double A2, double A3, double ti){
+	return A0+(A1-A0)/(1+exp(A2*(A3-ti)));
+}
+
+void BaseModule::simulatedAnnealingFunc1(int calibMethod){
 	double x0 = 0.02;
 	double xmin = 0.00;
 	double xmax = 0.5;
@@ -357,24 +509,27 @@ void BaseModule::simulatedAnnealingFunc(int calibMethod){
 		sigmajVector.push_back(sigma0);
 		double xr = x0;
 		double x = x0;
+		double xlast = x0;
 		double fx;
 		boost::mt19937 *rng2 = new boost::mt19937();
 		rng2->seed(time(NULL));
 		// http://stackoverflow.com/questions/15747194/why-is-boosts-random-number-generation-on-a-normal-distribution-always-giving
 
-
 		FILE_LOG(logINFO) << x0 << "\t" << sigma0 ;
 		do {
-
 			double sigmaj = coolingMechanism(gamma, sigma0, totalNoOfSimulation, iterationNo);
 			normal_distribution<> distribution(x, sigmaj);
 			variate_generator<boost::mt19937&, normal_distribution<> > generate_next(*rng2, distribution);
-			x = generate_next();
+
+			if (x == x0 || xlast == x){
+				x = generate_next();
+			}
 			while (!(x > xmin && x < xmax)){
 				x = generate_next();
 			}
+			xlast = x;
 
-			FILE_LOG(logINFO) << x << "\t" << sigmaj ;
+			FILE_LOG(logINFO) << x << "\t" << sigmaj << "\t";
 			++iterationNo;
 		}while(iterationNo < totalNoOfSimulation);
 }
