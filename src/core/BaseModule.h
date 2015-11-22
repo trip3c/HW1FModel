@@ -286,6 +286,11 @@ public:
 
 	void assignVaryingMeanReversion(double A0, double A1, double A2, double A3);
 
+	vector<vector<double> > rowsToColumnVector(vector<vector<double> > numbers);
+
+	void printVectorVector(vector<vector<double> > vec);
+
+	void printVector(vector<double> vec);
 };
 
 #endif /* BASEMODULE_H_ */

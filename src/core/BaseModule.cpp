@@ -601,3 +601,38 @@ void main1(void)
 		cout << resampler() << endl ;
 	}
 }
+
+vector<vector<double> > BaseModule::rowsToColumnVector(vector<vector<double> > numbers){
+	vector<vector<double> >::iterator vvi_iterator;
+	vector<double>::iterator vi_iterator;
+
+	int columns = numbers.front().size();
+	vector<vector<double> > newNumbers;
+	for(int i = 0; i<columns; i++){
+		vector<double> newNumbersCols;
+		int j;
+		for(vvi_iterator = numbers.begin(); vvi_iterator!=numbers.end(); ++vvi_iterator) {
+			for(vi_iterator = (*vvi_iterator).begin(), j=0; j<i; ++vi_iterator,++j){}
+			newNumbersCols.push_back(*vi_iterator);
+		}
+		newNumbers.push_back(newNumbersCols);
+	}
+	return newNumbers;
+}
+
+
+void BaseModule::printVector(vector<double> vec){
+	for(vector<double>::iterator iterator = vec.begin(); iterator!=vec.end(); ++iterator){
+		cout << *iterator << "\t";
+	}
+	cout << endl;
+}
+void BaseModule::printVectorVector(vector<vector<double> > vec){
+	for(vector<vector<double> >::iterator iterator = vec.begin(); iterator!=vec.end(); ++iterator){
+		for(vector<double>::iterator iterator2 = (*iterator).begin(); iterator2!=(*iterator).end(); ++iterator2){
+			cout << *iterator2 << "\t";
+		}
+		cout << endl;
+	}
+	cout << endl;
+}

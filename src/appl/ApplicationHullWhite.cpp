@@ -4,6 +4,7 @@
 #include "mod1/Module1Appl.h"
 #include "mod2/Module2Appl.h"
 #include "mod3/Module3Appl.h"
+#include "mod4/Module4Appl.h"
 #include "core/log.h"
 
 using namespace std;
@@ -24,8 +25,8 @@ int ApplicationHullWhite::moduleChooserFunc(){
 	cout << "Choose Module to execute: " << endl;
 	cout << "Press 1 for Module 1: Pricing European Swaption" << endl;
 	cout << "Press 2 for Module 2: Calibrating theta to yield curve" << endl;
-	cout << "Press 3 for Module 3: Calculating BS swaption volatility" << endl;
-	cout << "Press 4 for Module 4: Calibrating mean reversion and volatility" << endl;
+	cout << "Press 3 for Module 3: Calibrating mean reversion" << endl;
+	cout << "Press 4 for Module 4: Calculating Black swaption price" << endl;
 	cout << "Exit:     Press q" << endl;
 
 	cin >> choice;
@@ -42,7 +43,9 @@ int ApplicationHullWhite::moduleChooserFunc(){
 		Module3Appl mod3 = Module3Appl();
 		mod3.moduleMainFunc();
 	}else if (choice=='4'){
-		cout<< "choice 4 " << endl;
+		cout<< "Module 4 starting... " << endl;
+		Module4Appl mod4 = Module4Appl();
+		mod4.moduleMainFunc();
 	}
 	return 0;
 }
