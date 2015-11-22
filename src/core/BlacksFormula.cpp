@@ -8,14 +8,17 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include "BlacksFormula.h"
+
+BlacksFormula::BlacksFormula(){}
+BlacksFormula::~BlacksFormula() {}
+
 /*********************************************************************************
  normalDistribution: Return N(x)
  [in]: double x
  [out]: double N(x)
  *********************************************************************************/
-
-
-double normalDistribution(double x)
+double BlacksFormula::normalDistribution(double x)
 {
   static const double RT2PI = sqrt(4.0*acos(0.0));
   static const double SPLIT = 10./sqrt(2);
@@ -28,25 +31,25 @@ double normalDistribution(double x)
   // if z outside these limits then value effectively 0 or 1 for machine precision
   if(z<=37.0)
   {
-    // NDash = N'(z) * sqrt{2\pi}
-    const double NDash = exp(-z*z/2.0)/RT2PI;
-    if(z<SPLIT)
-    {
-      const double Pz = (((((a[6]*z + a[5])*z + a[4])*z + a[3])*z + a[2])*z + a[1])*z + a[0];
-      const double Qz = ((((((b[7]*z + b[6])*z + b[5])*z + b[4])*z + b[3])*z + b[2])*z + b[1])*z + b[0];
-      Nz = RT2PI*NDash*Pz/Qz;
-    }
-    else
-    {
-      const double F4z = z + 1.0/(z + 2.0/(z + 3.0/(z + 4.0/(z + 13.0/20.0))));
-      Nz = NDash/F4z;
-    }
+	// NDash = N'(z) * sqrt{2\pi}
+	const double NDash = exp(-z*z/2.0)/RT2PI;
+	if(z<SPLIT)
+	{
+	  const double Pz = (((((a[6]*z + a[5])*z + a[4])*z + a[3])*z + a[2])*z + a[1])*z + a[0];
+	  const double Qz = ((((((b[7]*z + b[6])*z + b[5])*z + b[4])*z + b[3])*z + b[2])*z + b[1])*z + b[0];
+	  Nz = RT2PI*NDash*Pz/Qz;
+	}
+	else
+	{
+	  const double F4z = z + 1.0/(z + 2.0/(z + 3.0/(z + 4.0/(z + 13.0/20.0))));
+	  Nz = NDash/F4z;
+	}
   }
   return x>=0.0 ? 1-Nz : Nz;
 }
 
 /*********************************************************************************
-BlacksFormula : computes the price of cap using BlackÕs 1976 model
+BlacksFormulaFunc : computes the price of cap using BlackÕs 1976 model
 [in]: double f : forward rate
 double P : price of pure discount bond
 double L : principal amount of bond
@@ -57,12 +60,16 @@ double dtau : fixed tenor between reset times
 [out] : double : price of cap
 ********************************************************************************/
 
-double BlacksFormula(double f, double P, double L, double Rcap, double
-vol, double tau, double dtau)
+double BlacksFormula::BlacksFormulaFunc(double f, double P, double L, double Rcap, double
+vol, double tau, double dtau, bool isCaplet)
 {
 	double d1 = (log(f) / Rcap) + ((vol*vol)/2)*tau/(vol*sqrt(tau));
 	double d2 = d1 - vol*sqrt(tau);
-	return P*dtau*L*(f*normalDistribution(d1) - Rcap*normalDistribution(d2));
+	if (isCaplet){
+		return P*dtau*L*(f*normalDistribution(d1) - Rcap*normalDistribution(d2));
+	}else{
+		return P*dtau*L*(-f*normalDistribution(-d2) + Rcap*normalDistribution(-d1));
+	}
 }
 
 /**********************************************************************************
@@ -73,12 +80,13 @@ vector<double> maturity : vector of caplet maturities (payment times)
 vector<double> Rcap : cap rate
 double L : principal amount of loan
 double tenor : length of time between payment times (reset dates)
+bool isCaplet : 1 for caplet, 0 for floorlet
 [out]: vector<double> : caplets
 *********************************************************************************/
-std::vector<double> priceBlackCap(std::vector<double> capVol, std::vector<double> PDB,
-		std::vector<double> maturity, double Rcap, double L, double tenor)
+std::vector<double> BlacksFormula::priceBlackCap(std::vector<double> capVol, std::vector<double> PDB,
+		std::vector<double> maturity, double Rcap, double L, double tenor, bool isCaplet)
 {
-	int i;
+	unsigned int i;
 	std::vector<double> f; // forward rates
 	std::vector<double> R; // yield price
 	std::vector<double> capV; // stores caplet volatilities
@@ -109,7 +117,7 @@ std::vector<double> priceBlackCap(std::vector<double> capVol, std::vector<double
 		t.push_back(tmp);
 	}
 	// compute forward rates
-	for (i = 0; i < capVol.size(); i++)
+	for (i = 0; i < capVol.size()-1; i++)
 	{
 		tmp = -(1/t[i])*(log(P[i]));
 		R.push_back(tmp);
@@ -119,8 +127,9 @@ std::vector<double> priceBlackCap(std::vector<double> capVol, std::vector<double
 	// compute caplets with Blacks Formula
 	for (i = 0; i < capVol.size()-1; i++)
 	{
-		tmp = BlacksFormula(f[i],P[i],faceValue,Rcap,capV[i],t[i],tenor);
+		tmp = BlacksFormulaFunc(f[i],P[i],faceValue,Rcap,capV[i],t[i],tenor,isCaplet);
 		caplet.push_back(tmp);
 	}
 	return caplet;
 }
+
