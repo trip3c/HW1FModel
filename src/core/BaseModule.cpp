@@ -477,6 +477,57 @@ void BaseModule::assignVaryingMeanReversion(double A0, double A1, double A2, dou
 	calculateEt();
 }
 
+double BaseModule::cubicFunc(double a0, double a1, double a2, double a3, double ti){
+	return a0+a1*ti+a2*pow(ti,2)+a3*pow(ti,3);
+}
+
+void BaseModule::assignVaryingVolatility(double a0, double a1, double a2, double a3){
+	double x1 = (-a2+sqrt(pow(a2,2) - 3*a1*a3))/(3*a3);
+	double x2 = -a2 / (3*a3);
+	for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); it!=data.time.end(); ++it, ++it1){
+			if(*it < x2){
+				*it1 = (a1 + 2 * a2 * x2 + 3 * a3 * pow(x2, 2)) * (*it - x2) + cubicFunc(a0, a1, a2, a3, x2);
+			}
+			else if(*it > x2){
+				*it1 = cubicFunc(a0, a1, a2, a3, x2);
+			}
+			else
+			*it1 = cubicFunc(a0, a1, a2, a3, *it);
+		}
+		for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); it!=data.time.end(); ++it, ++it1){
+			FILE_LOG(logDEBUG) << "VaryingSigma\t" << *it << "\t" << *it1 ;
+		}
+}
+
+
+bool BaseModule::validCubicFunc(double a0, double a1, double a2, double a3){
+	if(a3<=0){
+		//assure the upward shape
+		return false;
+	}
+	if(pow(a2, 2) - 3*a1*a3 <= 0 ){
+		//assure two solutions of f'=0
+		return false;
+	}
+	double x1 = (-a2+sqrt(pow(a2,2) - 3*a1*a3))/(3*a3);
+	double x2 = -a2 / (3*a3);
+	if(cubicFunc(a0,a1,a2,a3,x1)<0){
+		//assure positive volatility
+		return false;
+	}
+	if(a2>=0){
+		//assure x2>0
+		return false;
+	}
+	if(x1>=*data.time.end()){
+		//assure x1>maximum maturity
+		return false;
+	}
+	if((a1 + 2 * a2 * x2 + 3 * a3 * pow(x2, 2)) * (0 - x2) + cubicFunc(a0, a1, a2, a3, x2)>=1){
+		return false;
+	}
+}
+
 void BaseModule::simulatedAnnealingFunc2(int calibMethod){
 //	double x0 = 0.02;
 //	double xmin = 0.00;
@@ -543,6 +594,7 @@ void BaseModule::simulatedAnnealingFunc2(int calibMethod){
 double BaseModule::logisticFunc(double A0, double A1, double A2, double A3, double ti){
 	return A0+(A1-A0)/(1+exp(A2*(A3-ti)));
 }
+
 
 void BaseModule::simulatedAnnealingFunc1(int calibMethod){
 	double x0 = 0.02;
@@ -687,24 +739,26 @@ void BaseModule::printVectorVector(vector<vector<double> > vec){
 }
 
 void BaseModule::simulatedAnnealingFuncForVolatility(){
-	double A0_0 = 0.01, A1_0 = 0.04, A2_0 = 0.5; //equivalent to x=A0, A1, A2
-	double sd0_0= 1, sd1_0=1, sd2_0=0.05;
-	double A1minusA0 = A1_0 - A0_0;
+	double A0_0=0.814719, A1_0=-0.0584122, A2_0=-0.00192567 ,A3_0=0.000213964;
+	double sd0_0= fabs(A0_0)/3;
+	double sd1_0=fabs(A1_0)/3;
+	double sd2_0=fabs(A2_0)/3;
+	double sd3_0=fabs(A3_0)/3;
 
-	assignVaryingMeanReversion(A0_0, A1_0, A2_0, 0.0);
-//	assignVaryingVolatility(A0_0, A1_0, A2_0, 0.0);
+	vector<double> optimalMeanReversion = simulatedAnnealingFunc(0);
+	assignVaryingMeanReversion(optimalMeanReversion[0],optimalMeanReversion[1],optimalMeanReversion[2],0);
+	assignVaryingVolatility(A0_0, A1_0, A2_0, A3_0);
 	double gLast = volatilityCalibrationFunctionG();
 
 	double gamma = 5.0;
 	int totalNoOfSimulation = 100;
 	int iterationNo = 1;
-	vector<double> fxVector, xrVector, sigmajVector;
+	vector<double> fxVector;//, xrVector, sigmajVector;
 	fxVector.push_back(gLast);
 	double gx = gLast;
-	double A0r = A0_0, A1r=A1_0, A2r=A2_0;
-	double A0 = A0_0, A1=A1_0, A2=A2_0;
-	double A0last = A0_0, A1last=A1_0, A2last=A2_0;
-	double A3=0;
+//	double A0r = A0_0, A1r=A1_0, A2r=A2_0;
+	double A0 = A0_0, A1=A1_0, A2=A2_0, A3=A3_0;
+//	double A0last = A0_0, A1last=A1_0, A2last=A2_0;
 	double aVal;
 	int counter = 0;
 	double minGx = gLast;
@@ -713,7 +767,7 @@ void BaseModule::simulatedAnnealingFuncForVolatility(){
 	rng2->seed(time(NULL));
 
 	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Final\t" << iterationNo << "\t" << A0_0 << "\t" << sd0_0 << "\t"
-			<< A1_0 << "\t" << sd1_0 << "\t" << A2_0 << "\t" << sd2_0 << "\t" << 0 << "\t" << gLast;
+			<< A1_0 << "\t" << sd1_0 << "\t" << A2_0 << "\t" << sd2_0 << "\t" << A3_0 << "\t" << sd3_0 << "\t" << 0 << "\t" << gLast;
 	do {
 		double sd0j = coolingMechanism(gamma, sd0_0, totalNoOfSimulation, iterationNo);
 		normal_distribution<> distribution0(A0, sd0j);
@@ -727,26 +781,33 @@ void BaseModule::simulatedAnnealingFuncForVolatility(){
 		normal_distribution<> distribution2(A2, sd2j);
 		variate_generator<boost::mt19937&, normal_distribution<> > generate_next2(*rng2, distribution2);
 
-		counter = 0;
+		double sd3j = coolingMechanism(gamma, sd3_0, totalNoOfSimulation, iterationNo);
+				normal_distribution<> distribution3(A3, sd3j);
+				variate_generator<boost::mt19937&, normal_distribution<> > generate_next3(*rng2, distribution3);
+
+		counter=0;
+		int simulationInnerCount = coolingMechanism(gamma, sd3_0, totalNoOfSimulation, iterationNo);
 		do{
 			A0 = generate_next0();
 			A1 = generate_next1();
 			A2 = generate_next2();
-			if(A0<A1){
-//				assignVaryingVolatility(A0, A1, A2, 0);
+			A3 = generate_next3();
+			if(validCubicFunc(A0,A1,A2,A3)){
+				assignVaryingVolatility(A0, A1, A2, A3);
 				gx = volatilityCalibrationFunctionG();
 				FILE_LOG(logDEBUG) << "SimulatedAnnVol-Counter\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1
-						<< "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << gx;
+						<< "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << A3
+						<< "\t" << sd3j<< "\t" << counter << "\t" << gx;
 				++counter;
 			}
-		}while(gx>=gLast && counter<(int)round(100/iterationNo));
+		}while(gx>=gLast && counter<=simulationInnerCount);
 		fxVector.push_back(gx);
 		gLast = gx;
 		++iterationNo;
 		minGx = min(minGx, gx);
 
 		FILE_LOG(logDEBUG) << "SimulatedAnnVol-Final\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t"
-				<< A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << gx;
+				<< A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << A3 << "\t" << sd3j << "\t" << counter << "\t" << gx;
 	}while(iterationNo < totalNoOfSimulation);
 	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Min-Gx\t" << minGx;
 }
