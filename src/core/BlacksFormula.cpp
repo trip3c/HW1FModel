@@ -20,32 +20,24 @@ BlacksFormula::~BlacksFormula() {}
  *********************************************************************************/
 double BlacksFormula::normalDistribution(double x)
 {
-  static const double RT2PI = sqrt(4.0*acos(0.0));
-  static const double SPLIT = 10./sqrt(2);
-  static const double a[] = {220.206867912376,221.213596169931,112.079291497871,33.912866078383,6.37396220353165,0.700383064443688,3.52624965998911e-02};
-  static const double b[] = {440.413735824752,793.826512519948,637.333633378831,296.564248779674,86.7807322029461,16.064177579207,1.75566716318264,8.83883476483184e-02};
+	double a1 =  0.254829592;
+	   double a2 = -0.284496736;
+	   double a3 =  1.421413741;
+	   double a4 = -1.453152027;
+	   double a5 =  1.061405429;
+	   double p  =  0.3275911;
 
-  const double z = fabs(x);
-  double Nz = 0.0;
+	   // Save the sign of x
+	   int sign = 1;
+	   if (x < 0)
+	       sign = -1;
+	   x = fabs(x)/sqrt(2.0);
 
-  // if z outside these limits then value effectively 0 or 1 for machine precision
-  if(z<=37.0)
-  {
-	// NDash = N'(z) * sqrt{2\pi}
-	const double NDash = exp(-z*z/2.0)/RT2PI;
-	if(z<SPLIT)
-	{
-	  const double Pz = (((((a[6]*z + a[5])*z + a[4])*z + a[3])*z + a[2])*z + a[1])*z + a[0];
-	  const double Qz = ((((((b[7]*z + b[6])*z + b[5])*z + b[4])*z + b[3])*z + b[2])*z + b[1])*z + b[0];
-	  Nz = RT2PI*NDash*Pz/Qz;
-	}
-	else
-	{
-	  const double F4z = z + 1.0/(z + 2.0/(z + 3.0/(z + 4.0/(z + 13.0/20.0))));
-	  Nz = NDash/F4z;
-	}
-  }
-  return x>=0.0 ? 1-Nz : Nz;
+	   // A&S formula 7.1.26
+	   double t = 1.0/(1.0 + p*x);
+	   double y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x);
+
+	   return 0.5*(1.0 + sign*y);
 }
 
 /*********************************************************************************
@@ -61,14 +53,21 @@ double dtau : fixed tenor between reset times
 ********************************************************************************/
 
 double BlacksFormula::BlacksFormulaFunc(double f, double P, double L, double Rcap, double
-vol, double tau, double dtau, bool isCaplet)
+vol, double tau, double dtau, bool isCallSwaption)
 {
-	double d1 = (log(f) / Rcap) + ((vol*vol)/2)*tau/(vol*sqrt(tau));
+	//int w = isCallSwaption;
+	//double d1 = (log(f / Rcap) + (vol*vol/2)*tau)/(vol*sqrt(tau));
+	double part1 = log(f / Rcap);
+	double part2 = (vol*vol/2)*tau;
+	double part3 = vol*sqrt(tau);
+	double d1 = (part1 + part2)/part3;
 	double d2 = d1 - vol*sqrt(tau);
-	if (isCaplet){
+	if (isCallSwaption){
+		double b=Rcap*normalDistribution(d2);
+		double a=f*normalDistribution(d1);
 		return P*dtau*L*(f*normalDistribution(d1) - Rcap*normalDistribution(d2));
 	}else{
-		return P*dtau*L*(-f*normalDistribution(-d2) + Rcap*normalDistribution(-d1));
+		return P*dtau*L*(Rcap*normalDistribution(-d2) - f*normalDistribution(-d1));
 	}
 }
 
@@ -80,11 +79,11 @@ vector<double> maturity : vector of caplet maturities (payment times)
 vector<double> Rcap : cap rate
 double L : principal amount of loan
 double tenor : length of time between payment times (reset dates)
-bool isCaplet : 1 for caplet, 0 for floorlet
+bool isCallSwaption : 1 for call swaption, 0 for put swaption
 [out]: vector<double> : caplets
 *********************************************************************************/
 std::vector<double> BlacksFormula::priceBlackCap(std::vector<double> capVol, std::vector<double> PDB,
-		std::vector<double> maturity, double Rcap, double L, double tenor, bool isCaplet)
+		std::vector<double> maturity, double Rcap, double L, double tenor, bool isCallSwaption)
 {
 	unsigned int i;
 	std::vector<double> f; // forward rates
@@ -127,7 +126,7 @@ std::vector<double> BlacksFormula::priceBlackCap(std::vector<double> capVol, std
 	// compute caplets with Blacks Formula
 	for (i = 0; i < capVol.size()-1; i++)
 	{
-		tmp = BlacksFormulaFunc(f[i],P[i],faceValue,Rcap,capV[i],t[i],tenor,isCaplet);
+		tmp = BlacksFormulaFunc(f[i],P[i],faceValue,Rcap,capV[i],t[i],tenor,isCallSwaption);
 		caplet.push_back(tmp);
 	}
 	return caplet;

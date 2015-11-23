@@ -48,8 +48,7 @@ int Module4Appl::moduleMainFunc(){
 	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 
 	initializeAndAssignConstantWeights();
-
-	vector<vector<double> > marketVolatilityColwise = rowsToColumnVector(actualVol.vol);
+	vector<vector<double> > marketVolatilityColwise = transposeVector(actualVol.vol);
 	BlacksFormula black;
 	vector<vector<double> > blckPrices;
 	vector<double>::iterator itTenor = actualVol.tenor.begin();
@@ -64,8 +63,7 @@ int Module4Appl::moduleMainFunc(){
 		++itTenor;
 		blckPrices.push_back(pricesCol);
 	}
-	blckPrices = rowsToColumnVector(blckPrices);
-
+	blckPrices = transposeVector(blckPrices);
 	cout << "Maturity\\Tenor\t" ;
 	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
 		cout << *it_ten << "\t";
