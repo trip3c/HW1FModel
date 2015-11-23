@@ -132,3 +132,16 @@ std::vector<double> BlacksFormula::priceBlackCap(std::vector<double> capVol, std
 	return caplet;
 }
 
+double blackSwaptionPriceATM(double maturity, double tenor, double implyVol, double swapRate, bool isPayer){
+    double w=-1;
+    if(isPayer){
+        w=1;
+    }
+    double d1=implyVol * sqrt(maturity)/2;
+    double d2=-d1;
+    double Bl = swapRate * w * (N(w*d1,0,1) - N(w*d2,0,1));
+    double multiplier = 0;
+    for(int i = locate(maturity)+1; i <= locate(maturity + tenor);i++)
+        multiplier += Constants.PAYMENT_FREQ * data.priceD[i];
+    return Bl * multiplier;
+}
