@@ -57,12 +57,14 @@ public:
 	 * @param maturity This parameter holds the maturity of swaption
 	 * @param weights This parameter holds the weights for the corresponding swaption
 	 *                calibration
+	 * @param strikeRate This variable holds the strike rates for ATM swaption
 	 */
 	struct SwaptionVolStruct{
 		vector<vector<double> > vol;
 		vector<double> tenor;
 		vector<double> maturity;
 		vector<vector<double> > weights;
+		vector<vector<double> > strikeRate;
 	};
 
 	enum CalibrationTechnique {
@@ -272,7 +274,7 @@ public:
 
 	double blackFormula(double K, double F, double v, int w);
 
-	void simulatedAnnealingFunc(int cal);
+	vector<double> simulatedAnnealingFunc();
 
 	double coolingMechanism(double gamma, double sigma0, int totalNoOfSimulation, int iterationNo);
 
@@ -295,6 +297,8 @@ public:
 	double volatilityCalibrationFunctionG();
 
 	void simulatedAnnealingFuncForVolatility();
+
+	void initializeStrikeRateForSwaptionATM();
 
 };
 

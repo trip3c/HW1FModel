@@ -34,10 +34,6 @@ int Module1Appl::moduleMainFunc(){
 	actualVol.maturity = helper.initializeSwaptionVolatilityMaturity();
 	actualVol.tenor = helper.initializeSwaptionVolatilityTenor();
 
-//	for(std::vector<double>::iterator it = actualVol.tenor.begin();
-//			it!=actualVol.tenor.end(); ++it){
-//		cout << *it << endl;
-//	}
 	for(int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
@@ -48,7 +44,8 @@ int Module1Appl::moduleMainFunc(){
 
 	double t = 0.0;
 	double T = 0.0;
-	double strike = constants.FIXED_STRIKE;
+	initializeStrikeRateForSwaptionATM();
+	printVectorVector(actualVol.strikeRate);
 	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
 	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 	cout << "Maturity\\Tenor\t" ;
@@ -56,17 +53,16 @@ int Module1Appl::moduleMainFunc(){
 		cout << *it_ten << "\t";
 	}
 	cout << endl;
-	for(vector<double>::iterator it_mat = actualVol.maturity.begin(); it_mat!=actualVol.maturity.end(); ++it_mat){
-		cout << *it_mat << "\t";
-		for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
-
-			t = *it_mat;
-			T = *it_ten + t;
+	for(int i=0; i<actualVol.maturity.size(); ++i){
+		cout << actualVol.maturity[i] << "\t";
+		for(int j=0; j<actualVol.tenor.size(); ++j){
+			t = actualVol.tenor[j];
+			T = actualVol.tenor[j] + actualVol.maturity[i];
+			double strike = actualVol.strikeRate[i][j];
 			double price = pSwaption(strike, t, T);
 			cout << price << "\t";
 		}
 		cout << endl;
 	}
-//	cout << pSwaption(strike, 10, 20);
 	return 0;
 }

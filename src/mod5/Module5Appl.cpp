@@ -46,7 +46,7 @@ int Module5Appl::moduleMainFunc(){
 	double T = 0.0;
 
 	initializeAndAssignConstantWeights();
-	simulatedAnnealingFunc(1);
+	simulatedAnnealingFunc();
 
 	return 0;
 }

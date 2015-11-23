@@ -42,26 +42,31 @@ int Module4Appl::moduleMainFunc(){
 	assignConstantVol(Constants::FIXED_VOLATILITY);
 	calculateEt();
 
-	double t = 0.0;
-	double T = 0.0;
 	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
 	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 
 	initializeAndAssignConstantWeights();
+	initializeStrikeRateForSwaptionATM();
 	vector<vector<double> > marketVolatilityColwise = transposeVector(actualVol.vol);
+	vector<vector<double> > strikeRatesTranspose = transposeVector(actualVol.strikeRate);
 	BlacksFormula black;
 	vector<vector<double> > blckPrices;
 	vector<double>::iterator itTenor = actualVol.tenor.begin();
 
+	int i=0;
 	for (vector<vector<double> >::iterator itVol = marketVolatilityColwise.begin(); itVol!=marketVolatilityColwise.end(); ++itVol){
 		vector<double> discountPrices;
+		int j=0;
 		for (vector<double>::iterator itMaturity = actualVol.maturity.begin(); itMaturity!=actualVol.maturity.end(); ++itMaturity){
 			int pos = locate(*itTenor + *itMaturity);
 			discountPrices.push_back(data.priceD[pos]);
+			++j;
 		}
-		vector<double> pricesCol = black.priceBlackCap(*itVol, discountPrices, actualVol.maturity, constants.FIXED_STRIKE, 1.0, *itTenor, false);
+		vector<double> pricesCol = black.priceBlackCap(*itVol, discountPrices, actualVol.maturity,
+				strikeRatesTranspose[i][j], 1.0, *itTenor, false);
 		++itTenor;
 		blckPrices.push_back(pricesCol);
+		++i;
 	}
 	blckPrices = transposeVector(blckPrices);
 	cout << "Maturity\\Tenor\t" ;
