@@ -22,7 +22,7 @@
 #include <boost/random/variate_generator.hpp>
   using boost::variate_generator;
 #include <boost/random.hpp>
-
+#include "BlacksFormula.h"
 
 void main1(void);
 
