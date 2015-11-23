@@ -274,7 +274,7 @@ public:
 
 	double blackFormula(double K, double F, double v, int w);
 
-	vector<double> simulatedAnnealingFunc();
+	vector<double> simulatedAnnealingFuncForMeanReversion();
 
 	double coolingMechanism(double gamma, double sigma0, int totalNoOfSimulation, int iterationNo);
 
@@ -296,10 +296,19 @@ public:
 
 	double volatilityCalibrationFunctionG();
 
-	void simulatedAnnealingFuncForVolatility();
+	vector<double> simulatedAnnealingFuncForVolatility();
 
 	void initializeStrikeRateForSwaptionATM();
 
+	void assignVaryingVolatility(double a0, double a1, double a2, double a3);
+
+	double cubicFunc(double a0, double a1, double a2, double a3, double ti);
+
+	bool validCubicFunc(double a0, double a1, double a2, double a3);
+
+	void checkMeanReversionConvergence(int loopCount);
+
+	double blackSwaptionPriceATM(double maturity, double tenor, double implyVol, double swapRate, bool isPayer);
 };
 
 #endif /* BASEMODULE_H_ */

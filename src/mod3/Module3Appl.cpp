@@ -65,7 +65,8 @@ int Module3Appl::moduleMainFunc(){
 
 	initializeAndAssignConstantWeights();
 //	meanReversionCalibrationFunctionF();
-	simulatedAnnealingFunc();
+//	simulatedAnnealingFunc();
+	checkMeanReversionConvergence(25);
 
 	return 0;
 }

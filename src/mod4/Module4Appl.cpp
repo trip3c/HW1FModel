@@ -47,42 +47,64 @@ int Module4Appl::moduleMainFunc(){
 
 	initializeAndAssignConstantWeights();
 	initializeStrikeRateForSwaptionATM();
-	vector<vector<double> > marketVolatilityColwise = transposeVector(actualVol.vol);
-	vector<vector<double> > strikeRatesTranspose = transposeVector(actualVol.strikeRate);
-	BlacksFormula black;
-	vector<vector<double> > blckPrices;
-	vector<double>::iterator itTenor = actualVol.tenor.begin();
+//	vector<vector<double> > marketVolatilityColwise = transposeVector(actualVol.vol);
+//	vector<vector<double> > strikeRatesTranspose = transposeVector(actualVol.strikeRate);
+//	BlacksFormula black;
+//	vector<vector<double> > blckPrices;
+//	vector<double>::iterator itTenor = actualVol.tenor.begin();
+//
+//	int i=0;
+//	for (vector<vector<double> >::iterator itVol = marketVolatilityColwise.begin(); itVol!=marketVolatilityColwise.end(); ++itVol){
+//		vector<double> discountPrices;
+//		int j=0;
+//		for (vector<double>::iterator itMaturity = actualVol.maturity.begin(); itMaturity!=actualVol.maturity.end(); ++itMaturity){
+//			int pos = locate(*itTenor + *itMaturity);
+//			discountPrices.push_back(data.priceD[pos]);
+//			++j;
+//		}
+//		vector<double> pricesCol = black.priceBlackCap(*itVol, discountPrices, actualVol.maturity,
+//				strikeRatesTranspose[i][j], 1.0, *itTenor, false);
+//		++itTenor;
+//		blckPrices.push_back(pricesCol);
+//		++i;
+//	}
+//	blckPrices = transposeVector(blckPrices);
+//	cout << "Maturity\\Tenor\t" ;
+//	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
+//		cout << *it_ten << "\t";
+//	}
+//	cout << endl;
+////	for(vector<double>::iterator it_mat = actualVol.maturity.begin(); it_mat!=actualVol.maturity.end(); ++it_mat){
+////	}
+//	for(vector<vector<double> >::iterator blckit = blckPrices.begin(); blckit != blckPrices.end(); ++blckit){
+//		cout << "\t";
+//		for(vector<double>::iterator blckit2 = (*blckit).begin(); blckit2!=(*blckit).end(); ++blckit2){
+//			cout << *blckit2 << "\t";
+//		}
+//		cout << endl;
+//	}
 
+	vector<vector<double> > blckPrices;
 	int i=0;
-	for (vector<vector<double> >::iterator itVol = marketVolatilityColwise.begin(); itVol!=marketVolatilityColwise.end(); ++itVol){
-		vector<double> discountPrices;
+	for (vector<double>::iterator itMaturity = actualVol.maturity.begin(); itMaturity!=actualVol.maturity.end(); ++itMaturity){
 		int j=0;
-		for (vector<double>::iterator itMaturity = actualVol.maturity.begin(); itMaturity!=actualVol.maturity.end(); ++itMaturity){
-			int pos = locate(*itTenor + *itMaturity);
-			discountPrices.push_back(data.priceD[pos]);
+		vector<double> blckPricesInner;
+		for (vector<double>::iterator itTenor = actualVol.tenor.begin(); itTenor!=actualVol.tenor.end(); ++itTenor){
+			double prc = blackSwaptionPriceATM(*itMaturity, *itTenor, actualVol.vol[i][j], actualVol.strikeRate[i][j], true);
+			blckPricesInner.push_back(prc);
 			++j;
 		}
-		vector<double> pricesCol = black.priceBlackCap(*itVol, discountPrices, actualVol.maturity,
-				strikeRatesTranspose[i][j], 1.0, *itTenor, false);
-		++itTenor;
-		blckPrices.push_back(pricesCol);
+		blckPrices.push_back(blckPricesInner);
 		++i;
 	}
-	blckPrices = transposeVector(blckPrices);
-	cout << "Maturity\\Tenor\t" ;
-	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
-		cout << *it_ten << "\t";
-	}
-	cout << endl;
-//	for(vector<double>::iterator it_mat = actualVol.maturity.begin(); it_mat!=actualVol.maturity.end(); ++it_mat){
-//	}
-	for(vector<vector<double> >::iterator blckit = blckPrices.begin(); blckit != blckPrices.end(); ++blckit){
-		cout << "\t";
-		for(vector<double>::iterator blckit2 = (*blckit).begin(); blckit2!=(*blckit).end(); ++blckit2){
-			cout << *blckit2 << "\t";
+
+	for(vector<vector<double> >::iterator iterator = blckPrices.begin(); iterator!=blckPrices.end(); ++iterator){
+		for(vector<double>::iterator iterator2 = (*iterator).begin(); iterator2!=(*iterator).end(); ++iterator2){
+			cout << *iterator2 << "\t";
 		}
 		cout << endl;
 	}
+	cout << endl;
 
 	return 0;
 }

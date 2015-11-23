@@ -30,23 +30,23 @@ int Module5Appl::moduleMainFunc(){
 	data.priceD = mapVal.find(helper.PRICE)->second;
 	data.forward = mapVal.find(helper.FORWARD)->second;
 
+	assignConstantMeanReversion(0);
+	assignConstantVol(0);
 	actualVol.vol = helper.initializeVolatility();
 	actualVol.maturity = helper.initializeSwaptionVolatilityMaturity();
 	actualVol.tenor = helper.initializeSwaptionVolatilityTenor();
+	for(int i=0; i<data.time.size(); i++){
+		timePos[data.time[i]] = i;
+	}
+
+	initializeStrikeRateForSwaptionATM();
 
 	for(int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
 
-	assignConstantMeanReversion(Constants::FIXED_MEAN_REVERSION);
-	assignConstantVol(Constants::FIXED_VOLATILITY);
-	calculateEt();
-
-	double t = 0.0;
-	double T = 0.0;
-
 	initializeAndAssignConstantWeights();
-	simulatedAnnealingFunc();
+	simulatedAnnealingFuncForVolatility();
 
 	return 0;
 }

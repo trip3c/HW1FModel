@@ -53,16 +53,17 @@ int Module1Appl::moduleMainFunc(){
 		cout << *it_ten << "\t";
 	}
 	cout << endl;
-	for(int i=0; i<actualVol.maturity.size(); ++i){
-		cout << actualVol.maturity[i] << "\t";
-		for(int j=0; j<actualVol.tenor.size(); ++j){
-			t = actualVol.tenor[j];
-			T = actualVol.tenor[j] + actualVol.maturity[i];
-			double strike = actualVol.strikeRate[i][j];
-			double price = pSwaption(strike, t, T);
-			cout << price << "\t";
-		}
-		cout << endl;
-	}
+//	for(int i=0; i<actualVol.maturity.size(); ++i){
+//		cout << actualVol.maturity[i] << "\t";
+//		for(int j=0; j<actualVol.tenor.size(); ++j){
+//			t = actualVol.tenor[j];
+//			T = actualVol.tenor[j] + actualVol.maturity[i];
+//			double strike = actualVol.strikeRate[i][j];
+//			double price = pSwaption(strike, t, T);
+//			cout << price << "\t";
+//		}
+//		cout << endl;
+//	}
+	cout << pSwaption(actualVol.strikeRate[2][9], 0.75, 10.75);
 	return 0;
 }
