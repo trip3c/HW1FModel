@@ -539,6 +539,25 @@ void BaseModule::assignVaryingVolatility(double a0, double a1, double a2, double
 	}
 }
 
+void BaseModule::assignVaryingVolatilityUpwardSloping(double a0, double a1, double a2, double a3){
+	double x1 = (-a2-sqrt(pow(a2,2) - 3*a1*a3))/(3*a3);
+	double x2 = -a2 / (3*a3);
+	FILE_LOG(logDEBUG) << "VaryingSigma-(x1,x2)\t" << x1 << "\t" << x2;
+	for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); it!=data.time.end(); ++it, ++it1){
+		if(*it < x2){
+			*it1 = (a1 + 2 * a2 * x2 + 3 * a3 * pow(x2, 2)) * (*it - x2) + cubicFunc(a0, a1, a2, a3, x2);
+		}
+		else if(*it > x1){
+			*it1 = cubicFunc(a0, a1, a2, a3, x1);
+		}
+		else{
+			*it1 = cubicFunc(a0, a1, a2, a3, *it);
+		}
+	}
+	for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); it!=data.time.end(); ++it, ++it1){
+		FILE_LOG(logDEBUG) << "VaryingSigma\t" << *it << "\t" << *it1 ;
+	}
+}
 
 bool BaseModule::validCubicFunc(double a0, double a1, double a2, double a3){
 	if(a3<=0){
@@ -564,7 +583,40 @@ bool BaseModule::validCubicFunc(double a0, double a1, double a2, double a3){
 		//assure x1>maximum maturity
 		return false;
 	}
-	if((a1 + 2 * a2 * x2 + 3 * a3 * pow(x2, 2)) * (0 - x2) + cubicFunc(a0, a1, a2, a3, x2)>=1){
+	double fx2 = 2.0/100.0;
+	if((a1 + 2 * a2 * x2 + 3 * a3 * pow(x2, 2)) * (0 - x2) + cubicFunc(a0, a1, a2, a3, x2)>=fx2){
+		return false;
+	}
+	return true;
+}
+
+bool BaseModule::validCubicFuncUpwardSloping(double a0, double a1, double a2, double a3){
+	if(a3>=0){
+		//assure the upward shape
+		return false;
+	}
+	if(pow(a2, 2) - 3*a1*a3 <= 0 ){
+		//assure two solutions of f'=0
+		return false;
+	}
+	double x1 = (-a2-sqrt(pow(a2,2) - 3*a1*a3))/(3*a3);
+	double x2 = -a2 / (3*a3);
+
+	if((a1 + 2 * a2 * x2 + 3 * a3 * pow(x2, 2)) * (0.25 - x2) + cubicFunc(a0, a1, a2, a3, x2)<0){
+		//assure positive volatility
+		return false;
+	}
+	if(a2<=0){
+		//assure x2>0
+		return false;
+	}
+//	if(x1>=*data.time.end()){
+	if(x1>= *(--actualVol.maturity.end()) + *(--actualVol.tenor.end())){
+		//assure x1>maximum maturity
+		return false;
+	}
+	double fx2 = 2.0/100.0;
+	if(cubicFunc(a0,a1,a2,a3,x1)>=fx2){
 		return false;
 	}
 	return true;
@@ -782,8 +834,14 @@ void BaseModule::printVectorVector(vector<vector<double> > vec){
 
 vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 //	double A0_0=0.814719, A1_0=-0.0584122, A2_0=-0.00192567 ,A3_0=0.000213964;
-	double A0_0=0.14203958, A1_0=-0.0115965, A2_0=-0.0003823 ,A3_0=0.000042478;
-	double sd0_0= fabs(A0_0)/3;
+//	double A0_0=0.14203958, A1_0=-0.0115965, A2_0=-0.0003823 ,A3_0=0.000042478;
+//	double A0_0=0.012168895, A1_0=-0.000966275, A2_0=-0.0000318552,A3_0=0.00000353947;
+//	double A0_0=0.00977275, A1_0=-0.000614657, A2_0=-0.0000132694,A3_0=0.00000547935;
+	double A0_0=volatilityParams.A0, A1_0=volatilityParams.A1, A2_0=volatilityParams.A2,A3_0=volatilityParams.A3;
+
+	//Upward Sloping
+//	double A0_0=0.004470501, A1_0=0.000525428, A2_0=0.0000173218,A3_0=-0.00000192464;
+	double sd0_0=fabs(A0_0)/3;
 	double sd1_0=fabs(A1_0)/3;
 	double sd2_0=fabs(A2_0)/3;
 	double sd3_0=fabs(A3_0)/3;
@@ -795,6 +853,7 @@ vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 //	assignConstantMeanReversion(0.05);
 	calculateEt();
 	assignVaryingVolatility(A0_0, A1_0, A2_0, A3_0);
+//	assignVaryingVolatilitySpline(A0_0, A1_0, A2_0, A3_0);
 	double gLast = volatilityCalibrationFunctionG();
 
 	double gamma = 5.0;
@@ -844,7 +903,9 @@ vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 			A2 = generate_next2();
 			A3 = generate_next3();
 			if(validCubicFunc(A0,A1,A2,A3)){
+//			if(validCubicFuncSpline(A0,A1,A2,A3)){
 				assignVaryingVolatility(A0, A1, A2, A3);
+//				assignVaryingVolatilitySpline(A0, A1, A2, A3);
 				gx = volatilityCalibrationFunctionG();
 				FILE_LOG(logDEBUG) << "SimulatedAnnVol-Counter\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1
 						<< "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << A3
@@ -861,6 +922,11 @@ vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 			minA1 = A1;
 			minA2 = A2;
 			minA3 = A3;
+			volatilityParams.A0 = minA0;
+			volatilityParams.A1 = minA1;
+			volatilityParams.A2 = minA2;
+			volatilityParams.A3 = minA3;
+			volatilityParams.Gx = minGx;
 		}
 
 		FILE_LOG(logDEBUG) << "SimulatedAnnVol-Final\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t"
@@ -868,13 +934,15 @@ vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 				<< "\t" << minA0 << "\t" << minA1 << "\t" << minA2 << "\t" << minA3;
 	}while(iterationNo < totalNoOfSimulation);
 	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Min-Gx\t" << minGx << "\t" << minA0 << "\t" << minA1 << "\t" << minA2 << "\t" << minA3;
-
+	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Min-Gx<--------------------------->";
 	vector<double> retValue;
 	retValue.push_back(minA0);
 	retValue.push_back(minA1);
 	retValue.push_back(minA2);
 	retValue.push_back(minA3);
 	retValue.push_back(minGx);
+	FILE_LOG(logINFO) << "SimulatedAnnVol-GlobalMin-Gx\t" << volatilityParams.Gx << "\t" << volatilityParams.A0
+			<< "\t" << volatilityParams.A1 << "\t" << volatilityParams.A2 << "\t" << volatilityParams.A3;
 	return retValue;
 }
 
@@ -902,4 +970,22 @@ double BaseModule::blackSwaptionPriceATM(double maturity, double tenor, double i
     for(int i = locate(maturity)+1; i <= locate(maturity + tenor);i++)
         multiplier += constants.PAYMENT_FREQ * data.priceD[i];
     return Bl * multiplier;
+}
+
+void BaseModule::assignVaryingVolatilitySpline(double a0, double a1, double a2, double a3){
+	vector<double> value{a0,a1,a2,a3};
+	vector<double> t{0.25,7,14,20};
+	tk::spline s;
+	s.set_points(t,value);
+	double tme = actualVol.maturity.back() + actualVol.tenor.back();
+	for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); *it<=tme; ++it, ++it1){
+		*it1=s(*it);
+	}
+}
+
+bool BaseModule::validCubicFuncSpline(double a0, double a1, double a2, double a3){
+	double fx2=0.12;
+	if(a0>fx2 || a1>fx2 || a2>fx2 || a3>fx2 || a0<=0 || a1<=0 || a2<=0 || a3<=0)
+		return false;
+	return true;
 }

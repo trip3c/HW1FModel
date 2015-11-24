@@ -1,7 +1,7 @@
 /*
- * Module1Appl.cpp
+ * Module6Appl.cpp
  *
- *  Created on: Nov 10, 2015
+ *  Created on: Nov 22, 2015
  *      Author: Chandra
  */
 #include <iostream>
@@ -12,18 +12,18 @@
 #include <iomanip>
 #include "core/spline.h"
 #include "core/Constants.h"
-
-#include "Module1Appl.h"
+#include "Module6Appl.h"
+#include "core/BlacksFormula.h"
 
 using namespace std;
 
-Module1Appl::Module1Appl() {
+Module6Appl::Module6Appl() {
 }
 
-Module1Appl::~Module1Appl() {
+Module6Appl::~Module6Appl() {
 }
 
-int Module1Appl::moduleMainFunc(){
+int Module6Appl::moduleMainFunc(){
 	map<char, vector<double> > mapVal = helper.initializeDataStructure();
 
 	data.time = mapVal.find(helper.TIME)->second;
@@ -33,26 +33,32 @@ int Module1Appl::moduleMainFunc(){
 	actualVol.vol = helper.initializeVolatility();
 	actualVol.maturity = helper.initializeSwaptionVolatilityMaturity();
 	actualVol.tenor = helper.initializeSwaptionVolatilityTenor();
+	for(int i=0; i<data.time.size(); i++){
+		timePos[data.time[i]] = i;
+	}
+
+	assignConstantMeanReversion(0.05);
+	assignConstantVol(0.008);
+	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
+//	assignVaryingVolatility(0.00977275,-0.000614657,-0.0000132694,0.00000547935);
+//	assignVaryingVolatility(0.00976917,-0.000806147,-0.0000035288,0.0000138456);
+//	assignVaryingVolatility(0.00951463,-0.000620164,-0.000000911601,0.00000742415);
+
+	assignVaryingVolatilityUpwardSloping(0.0044705,0.000525428,0.0000173218,-0.00000192464);
+	calculateEt();
+
+
+	initializeStrikeRateForSwaptionATM();
 
 	for(int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
 
-	assignConstantMeanReversion(Constants::FIXED_MEAN_REVERSION);
-	assignConstantVol(Constants::FIXED_VOLATILITY);
-	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
-//	assignVaryingVolatility(0.0552728,-0.00404704,-0.000259549,0.0000485404);
-//	assignVaryingVolatility(0.00977275,-0.000614657,-0.0000132694,0.00000547935);
-	assignVaryingVolatility(0.00976917,-0.000806147,-0.0000035288,0.0000138456);
-
-
-	calculateEt();
+	initializeAndAssignConstantWeights();
+//	simulatedAnnealingFuncForVolatility();
 
 	double t = 0.0;
 	double T = 0.0;
-	initializeStrikeRateForSwaptionATM();
-	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
-	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 	cout << "Maturity\\Tenor\t" ;
 	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
 		cout << *it_ten << "\t";
@@ -63,23 +69,11 @@ int Module1Appl::moduleMainFunc(){
 		for(int j=0; j<actualVol.tenor.size(); ++j){
 			t = actualVol.tenor[j];
 			T = actualVol.tenor[j] + actualVol.maturity[i];
-			double strike = actualVol.strikeRate[i][j];
-			double price = pSwaption(strike, t, T);
-			cout << price << "\t";
+			double implVol = sqrt(calculateVswap(t, T));
+			cout << implVol << "\t";
 		}
 		cout << endl;
 	}
-
-//	assignConstantMeanReversion(0.025); //dummy
-//	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
-//	//double A0_0=0.814719, A1_0=-0.0584122, A2_0=-0.00192567 ,A3_0=0.000213964;
-//	double A0_0=0.14203958, A1_0=-0.0115965, A2_0=-0.0003823 ,A3_0=0.000042478;
-//	assignConstantVol(0.025); //dummy
-//	assignVaryingVolatility(A0_0, A1_0, A2_0, A3_0);
-//	calculateEt();
-//
-//	initializeStrikeRateForSwaptionATM();
-//	cout << pSwaption(actualVol.strikeRate[2][9], 0.75, 10.75);
 
 	return 0;
 }

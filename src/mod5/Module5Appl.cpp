@@ -30,6 +30,14 @@ int Module5Appl::moduleMainFunc(){
 	data.priceD = mapVal.find(helper.PRICE)->second;
 	data.forward = mapVal.find(helper.FORWARD)->second;
 
+	double A0_0=0.00977275, A1_0=-0.000614657, A2_0=-0.0000132694,A3_0=0.00000547935;
+//	double A0_0=0.008, A1_0=0.008, A2_0=0.008,A3_0=0.008;
+	volatilityParams.A0=A0_0;
+	volatilityParams.A1=A1_0;
+	volatilityParams.A2=A2_0;
+	volatilityParams.A3=A3_0;
+	volatilityParams.Gx=0.0;
+
 	assignConstantMeanReversion(0);
 	assignConstantVol(0);
 	actualVol.vol = helper.initializeVolatility();
@@ -46,7 +54,8 @@ int Module5Appl::moduleMainFunc(){
 	}
 
 	initializeAndAssignConstantWeights();
-	simulatedAnnealingFuncForVolatility();
-
+	for(int i = 0; i<10; ++i){
+		simulatedAnnealingFuncForVolatility();
+	}
 	return 0;
 }

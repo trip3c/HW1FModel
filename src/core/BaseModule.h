@@ -67,6 +67,14 @@ public:
 		vector<vector<double> > strikeRate;
 	};
 
+	struct VolatilityParams{
+		double A0;
+		double A1;
+		double A2;
+		double A3;
+		double Gx;
+	};
+
 	enum CalibrationTechnique {
 		CALIBRATE_MEAN_REVERSION = 2,
 		CALIBRATE_NOTHING = 100
@@ -100,6 +108,8 @@ public:
 	 * The reference for the swaption volatility
 	 */
 	SwaptionVolStruct actualVol;
+
+	VolatilityParams volatilityParams;
 
 	/**
 	 * The reference for constants file.
@@ -302,13 +312,21 @@ public:
 
 	void assignVaryingVolatility(double a0, double a1, double a2, double a3);
 
+	void assignVaryingVolatilityUpwardSloping(double a0, double a1, double a2, double a3);
+
 	double cubicFunc(double a0, double a1, double a2, double a3, double ti);
 
 	bool validCubicFunc(double a0, double a1, double a2, double a3);
 
+	bool validCubicFuncUpwardSloping(double a0, double a1, double a2, double a3);
+
 	void checkMeanReversionConvergence(int loopCount);
 
 	double blackSwaptionPriceATM(double maturity, double tenor, double implyVol, double swapRate, bool isPayer);
+
+	void assignVaryingVolatilitySpline(double a0, double a1, double a2, double a3);
+
+	bool validCubicFuncSpline(double a0, double a1, double a2, double a3);
 };
 
 #endif /* BASEMODULE_H_ */
