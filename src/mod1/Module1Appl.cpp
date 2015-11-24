@@ -40,12 +40,13 @@ int Module1Appl::moduleMainFunc(){
 
 	assignConstantMeanReversion(Constants::FIXED_MEAN_REVERSION);
 	assignConstantVol(Constants::FIXED_VOLATILITY);
+	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
+	assignVaryingVolatility(0.0552728,-0.00404704,-0.000259549,0.0000485404);
 	calculateEt();
 
 	double t = 0.0;
 	double T = 0.0;
 	initializeStrikeRateForSwaptionATM();
-	printVectorVector(actualVol.strikeRate);
 	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
 	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 	cout << "Maturity\\Tenor\t" ;
@@ -53,17 +54,28 @@ int Module1Appl::moduleMainFunc(){
 		cout << *it_ten << "\t";
 	}
 	cout << endl;
-//	for(int i=0; i<actualVol.maturity.size(); ++i){
-//		cout << actualVol.maturity[i] << "\t";
-//		for(int j=0; j<actualVol.tenor.size(); ++j){
-//			t = actualVol.tenor[j];
-//			T = actualVol.tenor[j] + actualVol.maturity[i];
-//			double strike = actualVol.strikeRate[i][j];
-//			double price = pSwaption(strike, t, T);
-//			cout << price << "\t";
-//		}
-//		cout << endl;
-//	}
-	cout << pSwaption(actualVol.strikeRate[2][9], 0.75, 10.75);
+	for(int i=0; i<actualVol.maturity.size(); ++i){
+		cout << actualVol.maturity[i] << "\t";
+		for(int j=0; j<actualVol.tenor.size(); ++j){
+			t = actualVol.tenor[j];
+			T = actualVol.tenor[j] + actualVol.maturity[i];
+			double strike = actualVol.strikeRate[i][j];
+			double price = pSwaption(strike, t, T);
+			cout << price << "\t";
+		}
+		cout << endl;
+	}
+
+//	assignConstantMeanReversion(0.025); //dummy
+//	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
+//	//double A0_0=0.814719, A1_0=-0.0584122, A2_0=-0.00192567 ,A3_0=0.000213964;
+//	double A0_0=0.14203958, A1_0=-0.0115965, A2_0=-0.0003823 ,A3_0=0.000042478;
+//	assignConstantVol(0.025); //dummy
+//	assignVaryingVolatility(A0_0, A1_0, A2_0, A3_0);
+//	calculateEt();
+//
+//	initializeStrikeRateForSwaptionATM();
+//	cout << pSwaption(actualVol.strikeRate[2][9], 0.75, 10.75);
+
 	return 0;
 }
