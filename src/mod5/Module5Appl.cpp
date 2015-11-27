@@ -19,7 +19,10 @@ using namespace std;
 
 Module5Appl::Module5Appl() {
 }
-
+Module5Appl::Module5Appl(BootstrapLoader sl) {
+	serviceLocator = sl;
+	helper = ModuleHelper(sl);
+}
 Module5Appl::~Module5Appl() {
 }
 
@@ -30,7 +33,10 @@ int Module5Appl::moduleMainFunc(){
 	data.priceD = mapVal.find(helper.PRICE)->second;
 	data.forward = mapVal.find(helper.FORWARD)->second;
 
-	double A0_0=0.00977275, A1_0=-0.000614657, A2_0=-0.0000132694,A3_0=0.00000547935;
+//	double A0_0=0.00977275, A1_0=-0.000614657, A2_0=-0.0000132694,A3_0=0.00000547935;
+//	double A0_0=0.00974798, A1_0=-0.000850625, A2_0=-0.000000341365, A3_0=0.0000153473;
+	double A0_0=0.02074798,A1_0=-0.00850625,A2_0=-0.000000341365,A3_0=0.0000953473;
+
 //	double A0_0=0.008, A1_0=0.008, A2_0=0.008,A3_0=0.008;
 	volatilityParams.A0=A0_0;
 	volatilityParams.A1=A1_0;
@@ -54,8 +60,9 @@ int Module5Appl::moduleMainFunc(){
 	}
 
 	initializeAndAssignConstantWeights();
-	for(int i = 0; i<10; ++i){
+	for(int i = 0; i<1; ++i){
 		simulatedAnnealingFuncForVolatility();
 	}
+//	cout << RationalApproximation(0.95);
 	return 0;
 }

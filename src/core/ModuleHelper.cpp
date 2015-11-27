@@ -17,6 +17,7 @@
 
 #include "core/spline.h"
 #include "ModuleHelper.h"
+#include "BootstrapLoader.h"
 
 #include <stdio.h>  /* defines FILENAME_MAX */
 #ifdef WINDOWS
@@ -30,12 +31,12 @@ using namespace std;
 
 
 ModuleHelper::ModuleHelper() {
-	// TODO Auto-generated constructor stub
-
 }
 
+ModuleHelper::ModuleHelper(BootstrapLoader pLoader) {
+	serviceLocator = pLoader;
+}
 ModuleHelper::~ModuleHelper() {
-	// TODO Auto-generated destructor stub
 }
 
 
@@ -101,9 +102,9 @@ map<char, vector<double> > ModuleHelper::interpolatePricesAndForwardRates(vector
 }
 
 map<char, vector<double> > ModuleHelper::initializeDataStructure(){
-	string directoryPath = getDirectoryPath();
-	directoryPath += "\\src\\defs\\UCLA_Discounts.txt";
-//	directoryPath = "E:\\work\\cpp_ws\\hullwhite\\src\\defs\\UCLA_Discounts.txt";
+//	string directoryPath = getDirectoryPath();
+//	directoryPath += "\\src\\defs\\UCLA_Discounts.txt";
+	string directoryPath = serviceLocator.getDiscounts();
 	cout << "Reading default input file: " << directoryPath << endl;
 	vector<vector<double> > importData = importDataFromFile(directoryPath);
 	vector<vector<double> > forwardRateAndDiscountFactors =
@@ -114,21 +115,24 @@ map<char, vector<double> > ModuleHelper::initializeDataStructure(){
 }
 //	printStructure();
 vector<vector<double> > ModuleHelper::initializeVolatility(){
-	string directoryPath = getDirectoryPath();
-	directoryPath += "\\src\\defs\\SwaptionVolatilityOnly.txt";
+//	string directoryPath = getDirectoryPath();
+//	directoryPath += "\\src\\defs\\SwaptionVolatilityOnly.txt";
+	string directoryPath = serviceLocator.getSwaptionVolatility();
 	vector<vector<double> > volData = importDataFromFile(directoryPath);
 	return volData;
 }
 vector<double> ModuleHelper::initializeSwaptionVolatilityMaturity(){
-	string directoryPath = getDirectoryPath();
-	directoryPath += "\\src\\defs\\SwaptionVolatilityMaturity.txt";
+//	string directoryPath = getDirectoryPath();
+//	directoryPath += "\\src\\defs\\SwaptionVolatilityMaturity.txt";
+	string directoryPath = serviceLocator.getSwaptionMaturity();
 	vector<vector<double> > volMaturityData = importDataFromFile(directoryPath);
 	return *(volMaturityData.begin());
 }
 
 vector<double> ModuleHelper::initializeSwaptionVolatilityTenor(){
-	string directoryPath = getDirectoryPath();
-	directoryPath += "\\src\\defs\\SwaptionVolatilityTenor.txt";
+//	string directoryPath = getDirectoryPath();
+//	directoryPath += "\\src\\defs\\SwaptionVolatilityTenor.txt";
+	string directoryPath = serviceLocator.getSwaptionTenor();
 	vector<vector<double> > volTenorData = importDataFromFile(directoryPath);
 	return *(volTenorData.begin());
 }

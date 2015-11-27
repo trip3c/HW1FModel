@@ -23,6 +23,7 @@
   using boost::variate_generator;
 #include <boost/random.hpp>
 #include "BlacksFormula.h"
+#include <boost/math/distributions/inverse_gaussian.hpp>
 
 void main1(void);
 
@@ -206,7 +207,7 @@ double BaseModule::pSwaption(double strike, double T0, double Tp){
     for(int i = 0; i < cashFlowTimes; ++i){
         Ti[i] = data.time[position_T0 + i + 1];
 //        ci[i] = strike * (Ti[i] - data.time[position_T0 + i]);
-        ci[i] = strike * constants.PAYMENT_FREQ;
+        ci[i] = strike * Constants::PAYMENT_FREQ;
         Ai[i]=calculateA(T0, Ti[i]);
         Bi[i]=calculateB(T0, Ti[i]);
         FILE_LOG(logDEBUG) << "Ai=" << Ai[i] << " Bi=" << Bi[i] << " ci=" << ci[i] << " Ti=" << Ti[i]
@@ -276,13 +277,13 @@ double BaseModule::calculateVswap(double T0, double Tn){
 
 
 void BaseModule::assignConstantMeanReversion(double val){
-//	double a = constants.FIXED_MEAN_REVERSION;
+//	double a = Constants::FIXED_MEAN_REVERSION;
 	int x = data.time.size();
 	data.aMeanReversion.assign(x, val);
 }
 
 void BaseModule::assignConstantVol(double val){
-//	double s1 = constants.FIXED_VOLATILITY;
+//	double s1 = Constants::FIXED_VOLATILITY;
 	int x = data.time.size();
 	data.sigma.assign(x, val);
 }
@@ -313,7 +314,7 @@ void BaseModule::initializeAndAssignConstantWeights(){
 	int rows = actualVol.maturity.size();
 	int cols = actualVol.tenor.size();
 	for (int i=0; i<rows; i++){
-		vector<double> rowi (cols, constants.CONSTANT_WEIGHT);
+		vector<double> rowi (cols, Constants::CONSTANT_WEIGHT);
 		actualVol.weights.push_back(rowi);
 	}
 }
@@ -390,7 +391,7 @@ double BaseModule::strikeRateForSwaptionATM(double maturity, double tenor){
 	int tenPosition = locate(tenor);
 	double cashFlowsSum = 0.0;
 	for(int i=matPosition+1; i<=tenPosition; i++){
-		cashFlowsSum += constants.PAYMENT_FREQ*data.priceD[i];
+		cashFlowsSum += Constants::PAYMENT_FREQ*data.priceD[i];
 	}
 	return (data.priceD[matPosition]-data.priceD[tenPosition])/cashFlowsSum;
 }
@@ -418,7 +419,7 @@ vector<double> BaseModule::simulatedAnnealingFuncForMeanReversion(){
 	double A0_0 = A0_min * 1.2, A1_0 = A1_max*0.8, A2_0 = 0.5; //equivalent to x=A0, A1, A2
 	double sd0_0= 0.005, sd1_0=0.005, sd2_0=0.005;
 
-		assignVaryingMeanReversion(A0_0, A1_0, A2_0, 0.0);
+		assignVaryingMeanReversion(A0_0, A1_0, A2_0);
 		double fLast = meanReversionCalibrationFunctionF();
 
 		double gamma = 5.0;
@@ -471,7 +472,7 @@ vector<double> BaseModule::simulatedAnnealingFuncForMeanReversion(){
 				A2 = generate_next2();
 //			}while((A1-A0)>A1minusA0MinTolerance && (A1-A0)<A1minusA0MaxTolerance && (A1>A0));
 				if((A0_min<A0) && (A0<A1_max) && (A0_min<A1) && (A1<A1_max) && (A2>0) && (A0<A1)){
-					assignVaryingMeanReversion(A0, A1, A2, 0);
+					assignVaryingMeanReversion(A0, A1, A2);
 					fx = meanReversionCalibrationFunctionF();
 					FILE_LOG(logDEBUG) << "SimulatedAnn-Counter\t" << iterationNo << "\t" << A0 << "\t" << sd0j
 							<< "\t" << A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << fx;
@@ -502,9 +503,10 @@ vector<double> BaseModule::simulatedAnnealingFuncForMeanReversion(){
 		return retValue;
 }
 
-void BaseModule::assignVaryingMeanReversion(double A0, double A1, double A2, double A3){
+void BaseModule::assignVaryingMeanReversion(double A0, double A1, double A2){
 //	A3 = *(--(data.time.end()))/2;
-	A3 = (*(--(actualVol.maturity.end())) + *(--(actualVol.tenor.end())))/2;
+	double A3 = (*(--(actualVol.maturity.end())) + *(--(actualVol.tenor.end())))/2;
+//	A3 = 10.0;
 	FILE_LOG(logDEBUG) << "VaryingMeanRev\tA3=\t"<<A3;
 	for(vector<double>::iterator it = data.time.begin(), it1 = data.aMeanReversion.begin(); it!=data.time.end(); ++it, ++it1){
 		*it1 = logisticFunc(A0, A1, A2, A3, *it);
@@ -849,11 +851,15 @@ vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 //	vector<double> optimalMeanReversion = simulatedAnnealingFuncForMeanReversion();
 	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Final-1stCall";
 //	assignVaryingMeanRevetrsion(optimalMeanReversion[0],optimalMeanReversion[1],optimalMeanReversion[2],0);
-	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
+//	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
+//	assignVaryingMeanReversion(0.0100008, 0.0788238, -0.52434, 0);
+//	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.25, 0);
+	assignVaryingMeanReversion(0.0500008, 0.1088238, 0.5);
+
 //	assignConstantMeanReversion(0.05);
 	calculateEt();
-	assignVaryingVolatility(A0_0, A1_0, A2_0, A3_0);
-//	assignVaryingVolatilitySpline(A0_0, A1_0, A2_0, A3_0);
+//	assignVaryingVolatility(A0_0, A1_0, A2_0, A3_0);
+	assignVaryingVolatilitySpline(A0_0, A1_0, A2_0, A3_0);
 	double gLast = volatilityCalibrationFunctionG();
 
 	double gamma = 5.0;
@@ -902,10 +908,10 @@ vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 			A1 = generate_next1();
 			A2 = generate_next2();
 			A3 = generate_next3();
-			if(validCubicFunc(A0,A1,A2,A3)){
-//			if(validCubicFuncSpline(A0,A1,A2,A3)){
-				assignVaryingVolatility(A0, A1, A2, A3);
-//				assignVaryingVolatilitySpline(A0, A1, A2, A3);
+//			if(validCubicFunc(A0,A1,A2,A3)){
+			if(validCubicFuncSpline(A0,A1,A2,A3)){
+//				assignVaryingVolatility(A0, A1, A2, A3);
+				assignVaryingVolatilitySpline(A0, A1, A2, A3);
 				gx = volatilityCalibrationFunctionG();
 				FILE_LOG(logDEBUG) << "SimulatedAnnVol-Counter\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1
 						<< "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << A3
@@ -968,8 +974,29 @@ double BaseModule::blackSwaptionPriceATM(double maturity, double tenor, double i
     double Bl = swapRate * w * (N(w*d1,0,1) - N(w*d2,0,1));
     double multiplier = 0;
     for(int i = locate(maturity)+1; i <= locate(maturity + tenor);i++)
-        multiplier += constants.PAYMENT_FREQ * data.priceD[i];
+        multiplier += Constants::PAYMENT_FREQ * data.priceD[i];
     return Bl * multiplier;
+}
+
+double BaseModule::blackImpliedVolatilitySwaptionATM(double maturity, double tenor, double price, double swapRate){
+	double multiplier = 0;
+	for(int i = locate(maturity)+1; i <= locate(maturity + tenor);i++){
+		multiplier += Constants::PAYMENT_FREQ * data.priceD[i];
+	}
+	double val = ((price/multiplier)+swapRate)/2.0/swapRate;
+	return RationalApproximation(val)*2;
+}
+
+double BaseModule::RationalApproximation(double p)
+{
+//	double t=sqrt(-2*log(p));
+//	vector<double> c {2.515517, 0.802853, 0.010328};
+//	vector<double> d {1.432788, 0.189269, 0.001308};
+//	return t-((c[0] + (c[1]*t) + (c[2]*t*t))/(1+(d[0]*t)+(d[1]*t*t)+(d[2]*t*t*t)));
+//	boost::math::inverse_gaussian_distribution my_inv(p);
+	boost::math::normal dist(0.0, 1.0);
+	return boost::math::quantile(dist, p);
+
 }
 
 void BaseModule::assignVaryingVolatilitySpline(double a0, double a1, double a2, double a3){

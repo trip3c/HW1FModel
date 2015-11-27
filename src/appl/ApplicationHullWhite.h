@@ -6,16 +6,17 @@
  */
 
 #include <string>
+#include "core/BootstrapLoader.h"
 
 #ifndef APPLICATIONHULLWHITE_H_
 #define APPLICATIONHULLWHITE_H_
 
 class ApplicationHullWhite{
 private:
-	std::string defPath;
+	BootstrapLoader serviceLocator;
 public:
 	ApplicationHullWhite();
-	ApplicationHullWhite(std::string sDefPath);
+	ApplicationHullWhite(BootstrapLoader loader);
 
 	int moduleChooserFunc();
 };

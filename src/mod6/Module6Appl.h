@@ -17,6 +17,7 @@ private:
 	ModuleHelper helper = ModuleHelper();
 public:
 	Module6Appl();
+	Module6Appl(BootstrapLoader sl);
 	virtual ~Module6Appl();
 	int moduleMainFunc();
 };

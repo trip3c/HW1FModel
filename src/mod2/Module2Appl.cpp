@@ -19,7 +19,10 @@ using namespace std;
 
 Module2Appl::Module2Appl() {
 }
-
+Module2Appl::Module2Appl(BootstrapLoader sl) {
+	serviceLocator = sl;
+	helper = ModuleHelper(sl);
+}
 Module2Appl::~Module2Appl() {
 }
 

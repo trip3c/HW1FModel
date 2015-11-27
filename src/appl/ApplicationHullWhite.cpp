@@ -11,16 +11,13 @@
 
 using namespace std;
 
-ApplicationHullWhite::ApplicationHullWhite(){
-	ApplicationHullWhite("");
-}
+ApplicationHullWhite::ApplicationHullWhite(){}
 
-ApplicationHullWhite::ApplicationHullWhite(string sDefPath){
-	defPath = sDefPath;
+ApplicationHullWhite::ApplicationHullWhite(BootstrapLoader pLoader){
+	serviceLocator = pLoader;
 }
 
 int ApplicationHullWhite::moduleChooserFunc(){
-	cout << defPath << endl;
     FILE_LOG(logDEBUG) << "Testing logger " << 12 << " iterations";
 
 	char choice;
@@ -36,27 +33,27 @@ int ApplicationHullWhite::moduleChooserFunc(){
 	cin >> choice;
 	if(choice=='1'){
 		cout<< "Module 1 starting... " << endl;
-		Module1Appl mod1 = Module1Appl();
+		Module1Appl mod1 = Module1Appl(serviceLocator);
 		mod1.moduleMainFunc();
 	}else if (choice=='2'){
 		cout<< "Module 2 starting... " << endl;
-		Module2Appl mod2 = Module2Appl();
+		Module2Appl mod2 = Module2Appl(serviceLocator);
 		mod2.moduleMainFunc();
 	}else if (choice=='3'){
 		cout<< "Module 3 starting... " << endl;
-		Module3Appl mod3 = Module3Appl();
+		Module3Appl mod3 = Module3Appl(serviceLocator);
 		mod3.moduleMainFunc();
 	}else if (choice=='4'){
 		cout<< "Module 4 starting... " << endl;
-		Module4Appl mod4 = Module4Appl();
+		Module4Appl mod4 = Module4Appl(serviceLocator);
 		mod4.moduleMainFunc();
 	}else if (choice=='5'){
 		cout<< "Module 5 starting... " << endl;
-		Module5Appl mod5 = Module5Appl();
+		Module5Appl mod5 = Module5Appl(serviceLocator);
 		mod5.moduleMainFunc();
 	}else if (choice=='6'){
 		cout<< "Module 6 starting... " << endl;
-		Module6Appl mod6 = Module6Appl();
+		Module6Appl mod6 = Module6Appl(serviceLocator);
 		mod6.moduleMainFunc();
 	}
 	return 0;

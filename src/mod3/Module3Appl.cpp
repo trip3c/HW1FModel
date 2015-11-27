@@ -18,7 +18,10 @@ using namespace std;
 
 Module3Appl::Module3Appl() {
 }
-
+Module3Appl::Module3Appl(BootstrapLoader sl) {
+	serviceLocator = sl;
+	helper = ModuleHelper(sl);
+}
 Module3Appl::~Module3Appl() {
 //	cout << "Module3Appl destructor" << endl;
 }

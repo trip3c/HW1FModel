@@ -14,9 +14,10 @@
 class Module2Appl: public BaseModule{
 
 private:
-	ModuleHelper helper = ModuleHelper();
+	ModuleHelper helper;
 public:
 	Module2Appl();
+	Module2Appl(BootstrapLoader sl);
 	virtual ~Module2Appl();
 	int moduleMainFunc();
 };

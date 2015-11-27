@@ -8,15 +8,18 @@
 #include <vector>
 #include <map>
 #include <string>
+#include "BootstrapLoader.h"
 
 #ifndef MODULEHELPER_H_
 #define MODULEHELPER_H_
 
 class ModuleHelper {
 private:
+	BootstrapLoader serviceLocator;
 	void printVectorOfVectors(std::vector<std::vector<double> > vec);
 public:
 	ModuleHelper();
+	ModuleHelper(BootstrapLoader pLoader);
 	virtual ~ModuleHelper();
 	std::map<char, std::vector<double> > initializeDataStructure();
 	std::vector<std::vector<double> > initializeVolatility();

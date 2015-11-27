@@ -19,7 +19,10 @@ using namespace std;
 
 Module6Appl::Module6Appl() {
 }
-
+Module6Appl::Module6Appl(BootstrapLoader sl) {
+	serviceLocator = sl;
+	helper = ModuleHelper(sl);
+}
 Module6Appl::~Module6Appl() {
 }
 
@@ -39,12 +42,14 @@ int Module6Appl::moduleMainFunc(){
 
 	assignConstantMeanReversion(0.05);
 	assignConstantVol(0.008);
-	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
+	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434);
 //	assignVaryingVolatility(0.00977275,-0.000614657,-0.0000132694,0.00000547935);
 //	assignVaryingVolatility(0.00976917,-0.000806147,-0.0000035288,0.0000138456);
 //	assignVaryingVolatility(0.00951463,-0.000620164,-0.000000911601,0.00000742415);
+//	assignVaryingVolatility(0.00974798,-0.000850625,-0.000000341365,0.0000153473);
+	assignVaryingVolatility(0.0111066,-0.000427563,-0.000000162653,0.00000888122);
 
-	assignVaryingVolatilityUpwardSloping(0.0044705,0.000525428,0.0000173218,-0.00000192464);
+//	assignVaryingVolatilityUpwardSloping(0.0044705,0.000525428,0.0000173218,-0.00000192464);
 	calculateEt();
 
 

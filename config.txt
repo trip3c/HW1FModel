@@ -1,0 +1,35 @@
+#Allowed Logging levels=ERROR, WARNING, INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3, DEBUG4
+[Application]
+LoggingLevel=INFO
+
+[Defaults]
+Payment_Freq=0.25
+constant_weight=1
+
+[MeanReversion]
+constant=0.05
+a0=0.05500008
+a1=0.1088238
+a2=0.5
+sd_a0=0.005
+sd_a1=0.005
+sd_a2=0.005
+gamma = 5
+
+[Volatility]
+constant=0.1
+a0=0.02074798
+a1=-0.00850625
+a2=-0.000000341365
+a3=0.0000953473
+sd_a0=0.3
+sd_a1=0.3
+sd_a2=0.3
+sd_a3=0.3
+
+[Files]
+swaption_volatility = E:\work\cpp_ws\HW1FModel\src\defs\SwaptionVolatilityOnly.txt
+swaption_maturity = E:\work\cpp_ws\HW1FModel\src\defs\SwaptionVolatilityMaturity.txt
+swaption_tenor = E:\work\cpp_ws\HW1FModel\src\defs\SwaptionVolatilityTenor.txt
+swaption_weights=E:\work\cpp_ws\HW1FModel\src\defs\SwaptionWeights.txt
+discounts=E:\work\cpp_ws\HW1FModel\src\defs\UCLA_Discounts.txt

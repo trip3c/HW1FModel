@@ -10,7 +10,7 @@
 //#include "Logger.h"
 #include "Constants.h"
 #include <random>
-
+#include "BootstrapLoader.h"
 using namespace std;
 
 #ifndef BASEMODULE_H_
@@ -22,6 +22,8 @@ using namespace std;
  */
 class BaseModule {
 public:
+	BootstrapLoader serviceLocator;
+
 	/**
 	 * This data structure holds the input parameters supplied by the user. It is
 	 * assumed that all the vectors are of the same length, e.g., the 5th index of
@@ -110,12 +112,6 @@ public:
 	SwaptionVolStruct actualVol;
 
 	VolatilityParams volatilityParams;
-
-	/**
-	 * The reference for constants file.
-	 * TODO Move to properties file
-	 */
-	Constants constants;
 
 	/**
 	 * An object that maps time data point as key to index of the time as the value.
@@ -296,7 +292,7 @@ public:
 
 	double logisticFunc(double A0, double A1, double A2, double A3, double ti);
 
-	void assignVaryingMeanReversion(double A0, double A1, double A2, double A3);
+	void assignVaryingMeanReversion(double A0, double A1, double A2);
 
 	vector<vector<double> > transposeVector(vector<vector<double> > numbers);
 
@@ -323,6 +319,10 @@ public:
 	void checkMeanReversionConvergence(int loopCount);
 
 	double blackSwaptionPriceATM(double maturity, double tenor, double implyVol, double swapRate, bool isPayer);
+
+	double blackImpliedVolatilitySwaptionATM(double maturity, double tenor, double price, double swapRate);
+
+	double RationalApproximation(double p);
 
 	void assignVaryingVolatilitySpline(double a0, double a1, double a2, double a3);
 
