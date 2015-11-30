@@ -34,18 +34,22 @@ int Module2Appl::moduleMainFunc(){
 	data.priceD = mapVal.find(helper.PRICE)->second;
 	data.forward = mapVal.find(helper.FORWARD)->second;
 
-	for(int i=0; i<data.time.size(); i++){
+	for(unsigned int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
 
-	assignConstantMeanReversion(Constants::FIXED_MEAN_REVERSION);
-	assignConstantVol(Constants::FIXED_VOLATILITY);
+	assignConstantMeanReversion(serviceLocator.getMeanReversionConstant());
+	assignConstantVol(serviceLocator.getVolatilityConstant());
+	assignVaryingMeanReversion(serviceLocator.getMeanReversionA0(), serviceLocator.getMeanReversionA1(),
+			serviceLocator.getMeanReversionA2(), *(--(data.time.end())));
+	assignVaryingVolatility(serviceLocator.getVolatilityA0(), serviceLocator.getVolatilityA1(),
+			serviceLocator.getVolatilityA2(), serviceLocator.getVolatilityA3());
 	calculateEt();
 //	calculateVr(1);
 	vector<double> th = theta();
 
-	cout << "a\t" << *(data.aMeanReversion.begin())<<"\t";
-	cout << "sigma\t" << *(data.sigma.begin())<<"\t";
+//	cout << "a\t" << *(data.aMeanReversion.begin())<<"\t";
+//	cout << "sigma\t" << *(data.sigma.begin())<<"\t";
 	for(vector<double>::iterator it = th.begin(); it != th.end(); ++it){
 		cout << *it << "\t" ;
 	}

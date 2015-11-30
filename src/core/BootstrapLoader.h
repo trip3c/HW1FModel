@@ -30,6 +30,7 @@ public:
 	double getMeanReversionSDA1();
 	double getMeanReversionSDA2();
 	double getMeanReversionGamma();
+	double getMeanReversionSimulations();
 
 	double getVolatilityConstant();
 	double getVolatilityA0();
@@ -40,6 +41,8 @@ public:
 	double getVolatilitySDA1();
 	double getVolatilitySDA2();
 	double getVolatilitySDA3();
+	double getVolatilityGamma();
+	double getVolatilitySimulations();
 
 	string getSwaptionVolatility();
 	string getSwaptionMaturity();

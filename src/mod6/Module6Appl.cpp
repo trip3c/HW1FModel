@@ -36,31 +36,25 @@ int Module6Appl::moduleMainFunc(){
 	actualVol.vol = helper.initializeVolatility();
 	actualVol.maturity = helper.initializeSwaptionVolatilityMaturity();
 	actualVol.tenor = helper.initializeSwaptionVolatilityTenor();
-	for(int i=0; i<data.time.size(); i++){
+	for(unsigned int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
 
-	assignConstantMeanReversion(0.05);
-	assignConstantVol(0.008);
-	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434);
-//	assignVaryingVolatility(0.00977275,-0.000614657,-0.0000132694,0.00000547935);
-//	assignVaryingVolatility(0.00976917,-0.000806147,-0.0000035288,0.0000138456);
-//	assignVaryingVolatility(0.00951463,-0.000620164,-0.000000911601,0.00000742415);
-//	assignVaryingVolatility(0.00974798,-0.000850625,-0.000000341365,0.0000153473);
-	assignVaryingVolatility(0.0111066,-0.000427563,-0.000000162653,0.00000888122);
-
-//	assignVaryingVolatilityUpwardSloping(0.0044705,0.000525428,0.0000173218,-0.00000192464);
+	assignConstantMeanReversion(serviceLocator.getMeanReversionConstant());
+	assignConstantVol(serviceLocator.getVolatilityConstant());
+	assignVaryingMeanReversion(serviceLocator.getMeanReversionA0(), serviceLocator.getMeanReversionA1(), serviceLocator.getMeanReversionA2());
+	assignVaryingVolatility(serviceLocator.getVolatilityA0(),serviceLocator.getVolatilityA1(),
+			serviceLocator.getVolatilityA2(),serviceLocator.getVolatilityA3());
 	calculateEt();
 
 
 	initializeStrikeRateForSwaptionATM();
 
-	for(int i=0; i<data.time.size(); i++){
+	for(unsigned int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
 
 	initializeAndAssignConstantWeights();
-//	simulatedAnnealingFuncForVolatility();
 
 	double t = 0.0;
 	double T = 0.0;
@@ -69,9 +63,9 @@ int Module6Appl::moduleMainFunc(){
 		cout << *it_ten << "\t";
 	}
 	cout << endl;
-	for(int i=0; i<actualVol.maturity.size(); ++i){
+	for(unsigned int i=0; i<actualVol.maturity.size(); ++i){
 		cout << actualVol.maturity[i] << "\t";
-		for(int j=0; j<actualVol.tenor.size(); ++j){
+		for(unsigned int j=0; j<actualVol.tenor.size(); ++j){
 			t = actualVol.tenor[j];
 			T = actualVol.tenor[j] + actualVol.maturity[i];
 			double implVol = sqrt(calculateVswap(t, T));

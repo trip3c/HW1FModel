@@ -37,77 +37,29 @@ int Module4Appl::moduleMainFunc(){
 	actualVol.maturity = helper.initializeSwaptionVolatilityMaturity();
 	actualVol.tenor = helper.initializeSwaptionVolatilityTenor();
 
-	for(int i=0; i<data.time.size(); i++){
+	for(unsigned int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
 
-	assignConstantMeanReversion(Constants::FIXED_MEAN_REVERSION);
-	assignConstantVol(Constants::FIXED_VOLATILITY);
+	assignConstantMeanReversion(serviceLocator.getMeanReversionConstant());
+	assignConstantVol(serviceLocator.getVolatilityConstant());
 	calculateEt();
-
-	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
-	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 
 	initializeAndAssignConstantWeights();
 	initializeStrikeRateForSwaptionATM();
-//	vector<vector<double> > marketVolatilityColwise = transposeVector(actualVol.vol);
-//	vector<vector<double> > strikeRatesTranspose = transposeVector(actualVol.strikeRate);
-//	BlacksFormula black;
-//	vector<vector<double> > blckPrices;
-//	vector<double>::iterator itTenor = actualVol.tenor.begin();
-//
-//	int i=0;
-//	for (vector<vector<double> >::iterator itVol = marketVolatilityColwise.begin(); itVol!=marketVolatilityColwise.end(); ++itVol){
-//		vector<double> discountPrices;
-//		int j=0;
-//		for (vector<double>::iterator itMaturity = actualVol.maturity.begin(); itMaturity!=actualVol.maturity.end(); ++itMaturity){
-//			int pos = locate(*itTenor + *itMaturity);
-//			discountPrices.push_back(data.priceD[pos]);
-//			++j;
-//		}
-//		vector<double> pricesCol = black.priceBlackCap(*itVol, discountPrices, actualVol.maturity,
-//				strikeRatesTranspose[i][j], 1.0, *itTenor, false);
-//		++itTenor;
-//		blckPrices.push_back(pricesCol);
-//		++i;
-//	}
-//	blckPrices = transposeVector(blckPrices);
-//	cout << "Maturity\\Tenor\t" ;
-//	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
-//		cout << *it_ten << "\t";
-//	}
-//	cout << endl;
-////	for(vector<double>::iterator it_mat = actualVol.maturity.begin(); it_mat!=actualVol.maturity.end(); ++it_mat){
-////	}
-//	for(vector<vector<double> >::iterator blckit = blckPrices.begin(); blckit != blckPrices.end(); ++blckit){
-//		cout << "\t";
-//		for(vector<double>::iterator blckit2 = (*blckit).begin(); blckit2!=(*blckit).end(); ++blckit2){
-//			cout << *blckit2 << "\t";
-//		}
-//		cout << endl;
-//	}
-
-	vector<vector<double> > blckPrices;
-	int i=0;
-	for (vector<double>::iterator itMaturity = actualVol.maturity.begin(); itMaturity!=actualVol.maturity.end(); ++itMaturity){
-		int j=0;
-		vector<double> blckPricesInner;
-		for (vector<double>::iterator itTenor = actualVol.tenor.begin(); itTenor!=actualVol.tenor.end(); ++itTenor){
-			double prc = blackSwaptionPriceATM(*itMaturity, *itTenor, actualVol.vol[i][j], actualVol.strikeRate[i][j], true);
-			blckPricesInner.push_back(prc);
-			++j;
-		}
-		blckPrices.push_back(blckPricesInner);
-		++i;
+	cout << "Maturity\\Tenor\t" ;
+	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
+		cout << *it_ten << "\t";
 	}
-
-	for(vector<vector<double> >::iterator iterator = blckPrices.begin(); iterator!=blckPrices.end(); ++iterator){
-		for(vector<double>::iterator iterator2 = (*iterator).begin(); iterator2!=(*iterator).end(); ++iterator2){
-			cout << *iterator2 << "\t";
+	cout << endl;
+	for(unsigned int i=0; i<actualVol.maturity.size(); ++i){
+		cout << actualVol.maturity[i] << "\t";
+		for(unsigned int j=0; j<actualVol.tenor.size(); ++j){
+			double price = blackSwaptionPriceATM(actualVol.maturity[j], actualVol.tenor[j], actualVol.vol[i][j], actualVol.strikeRate[i][j], true);
+			cout << price << "\t";
 		}
 		cout << endl;
 	}
-	cout << endl;
 
 	return 0;
 }

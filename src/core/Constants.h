@@ -11,11 +11,11 @@
 #define CONSTANTS_H_
 
 namespace Constants {
-	const double PAYMENT_FREQ = 0.25;
-	static constexpr double FIXED_MEAN_REVERSION = 5.0/100;
-	static constexpr double FIXED_VOLATILITY = 1.5/100;
+//	const double PAYMENT_FREQ = 0.25;
+//	static constexpr double FIXED_MEAN_REVERSION = 5.0/100;
+//	static constexpr double FIXED_VOLATILITY = 1.5/100;
 //	const double FIXED_STRIKE = 4.0/100;
-	const double CONSTANT_WEIGHT = 1;
+//	const double CONSTANT_WEIGHT = 1;
 
 	static constexpr const char* CONFIG_SECTIONS_APPLICATION = "Application";
 	static constexpr const char* CONFIG_SECTIONS_DEFAULTS = "Defaults";
@@ -36,6 +36,7 @@ namespace Constants {
 	static constexpr const char* CONFIG_MEANREVERSION_SD_A1 = "sd_a1";
 	static constexpr const char* CONFIG_MEANREVERSION_SD_A2 = "sd_a2";
 	static constexpr const char* CONFIG_MEANREVERSION_GAMMA = "gamma";
+	static constexpr const char* CONFIG_MEANREVERSION_SIMULATIONS = "simulations";
 
 	static constexpr const char* CONFIG_VOLATILITY_CONSTANT = "constant";
 	static constexpr const char* CONFIG_VOLATILITY_A0 = "a0";
@@ -46,6 +47,8 @@ namespace Constants {
 	static constexpr const char* CONFIG_VOLATILITY_SD_A1 = "sd_a1";
 	static constexpr const char* CONFIG_VOLATILITY_SD_A2 = "sd_a2";
 	static constexpr const char* CONFIG_VOLATILITY_SD_A3 = "sd_a3";
+	static constexpr const char* CONFIG_VOLATILITY_GAMMA = "gamma";
+	static constexpr const char* CONFIG_VOLATILITY_SIMULATIONS = "simulations";
 
 	static constexpr const char* CONFIG_SWAPTION_VOLATILITY = "swaption_volatility";
 	static constexpr const char* CONFIG_SWAPTION_MATURITY = "swaption_maturity";

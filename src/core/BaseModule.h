@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <map>
-//#include "Logger.h"
 #include "Constants.h"
 #include <random>
 #include "BootstrapLoader.h"
@@ -22,6 +21,10 @@ using namespace std;
  */
 class BaseModule {
 public:
+	/**
+	 * A reference of servicelocator containing the configuration parameters read from
+	 * the configuration file
+	 */
 	BootstrapLoader serviceLocator;
 
 	/**
@@ -69,6 +72,10 @@ public:
 		vector<vector<double> > strikeRate;
 	};
 
+	/**
+	 * This data structure holds parameters for volatility testing the convergence of
+	 * multiple runs
+	 */
 	struct VolatilityParams{
 		double A0;
 		double A1;
@@ -76,15 +83,6 @@ public:
 		double A3;
 		double Gx;
 	};
-
-	enum CalibrationTechnique {
-		CALIBRATE_MEAN_REVERSION = 2,
-		CALIBRATE_NOTHING = 100
-	};
-
-//	Logger& logger = Logger::getLogger();
-//	Logger& logger;
-//	Logger logg;
 
 	/**
 	 * The constructor of the base module class
@@ -111,6 +109,9 @@ public:
 	 */
 	SwaptionVolStruct actualVol;
 
+	/**
+	 * A placeholder for convergence test of volatility parameters
+	 */
 	VolatilityParams volatilityParams;
 
 	/**
@@ -274,58 +275,126 @@ public:
 	 */
 	void initializeAndAssignConstantWeights();
 
+	/**
+	 * This is the mean reversion objective function F(x). It returns the minimized F(x)
+	 */
 	double meanReversionCalibrationFunctionF();
 
+	/**
+	 * This function calculates the strike rate for swaption ATM
+	 */
 	double strikeRateForSwaptionATM(double maturity, double tenor);
 
-	double blackFormula(double K, double F, double v, int w);
-
+	/**
+	 * This function calibrates the mean reversion using simulated annealing method
+	 */
 	vector<double> simulatedAnnealingFuncForMeanReversion();
 
+	/**
+	 * This function calculates the cooling value for each iteration of the simulation
+	 */
 	double coolingMechanism(double gamma, double sigma0, int totalNoOfSimulation, int iterationNo);
 
-	std::mt19937 get_prng();
-
-	void simulatedAnnealingFunc1(int cal);
-
-	void simulatedAnnealingFunc2(int cal);
-
+	/**
+	 * This function calculates the logistic function for mean reversion parameters
+	 */
 	double logisticFunc(double A0, double A1, double A2, double A3, double ti);
 
+	/**
+	 * This function assigns varying mean reversion. In this function the A3, i.e., time value is variable
+	 */
 	void assignVaryingMeanReversion(double A0, double A1, double A2);
 
+	/**
+	 * This function assigns varying mean reversion
+	 */
+	void assignVaryingMeanReversion(double A0, double A1, double A2, double A3);
+
+	/**
+	 * This function transposes the vector. If inner vector holds vector row wise and outer column wise,
+	 * this function will transpose the vectors, i.e., the inner will hold vector column wise and outer
+	 * row wise.
+	 */
 	vector<vector<double> > transposeVector(vector<vector<double> > numbers);
 
+	/**
+	 * This function prints 2-level nested vector
+	 */
 	void printVectorVector(vector<vector<double> > vec);
 
+	/**
+	 * This function prints 1 level vector
+	 */
 	void printVector(vector<double> vec);
 
+	/**
+	 * This function calculates the volatility objective function G(x)
+	 */
 	double volatilityCalibrationFunctionG();
 
-	vector<double> simulatedAnnealingFuncForVolatility();
+	/**
+	 * This function calibrates the volatility using simulated annealing algorithm
+	 */
+	void simulatedAnnealingFuncForVolatility();
 
+	/**
+	 * This function calculates and assigns the strike rate for swaption ATM
+	 */
 	void initializeStrikeRateForSwaptionATM();
 
+	/**
+	 * This function assigns varying volatility
+	 */
 	void assignVaryingVolatility(double a0, double a1, double a2, double a3);
 
+	/**
+	 * This function assigns varying volatility assuming volatility is upward sloping
+	 */
 	void assignVaryingVolatilityUpwardSloping(double a0, double a1, double a2, double a3);
 
+	/**
+	 * This function calculates the cubic function value
+	 */
 	double cubicFunc(double a0, double a1, double a2, double a3, double ti);
 
+	/**
+	 * This function validates the cubic function
+	 */
 	bool validCubicFunc(double a0, double a1, double a2, double a3);
 
+	/**
+	 * This function validates the cubic function for upward sloping structure
+	 */
 	bool validCubicFuncUpwardSloping(double a0, double a1, double a2, double a3);
 
+	/**
+	 * This function validates the mean reversion convergence
+	 */
 	void checkMeanReversionConvergence(int loopCount);
 
+	/**
+	 * This function calculates the black price for ATM swaptions
+	 */
 	double blackSwaptionPriceATM(double maturity, double tenor, double implyVol, double swapRate, bool isPayer);
 
+	/**
+	 * This function calculates the implied volatility for ATM swaption
+	 */
 	double blackImpliedVolatilitySwaptionATM(double maturity, double tenor, double price, double swapRate);
 
+	/**
+	 * This function calculates the quantile value of cdf
+	 */
 	double RationalApproximation(double p);
 
+	/**
+	 * This function calculates the varying volatility using spline method
+	 */
 	void assignVaryingVolatilitySpline(double a0, double a1, double a2, double a3);
 
+	/**
+	 * This function validates the cubic function using spline method
+	 */
 	bool validCubicFuncSpline(double a0, double a1, double a2, double a3);
 };
 

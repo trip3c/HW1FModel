@@ -105,7 +105,6 @@ map<char, vector<double> > ModuleHelper::initializeDataStructure(){
 //	string directoryPath = getDirectoryPath();
 //	directoryPath += "\\src\\defs\\UCLA_Discounts.txt";
 	string directoryPath = serviceLocator.getDiscounts();
-	cout << "Reading default input file: " << directoryPath << endl;
 	vector<vector<double> > importData = importDataFromFile(directoryPath);
 	vector<vector<double> > forwardRateAndDiscountFactors =
 			rowsToColumnTransposeVector(importData);
@@ -113,7 +112,7 @@ map<char, vector<double> > ModuleHelper::initializeDataStructure(){
 			interpolatePricesAndForwardRates(forwardRateAndDiscountFactors);
 	return returnMap;
 }
-//	printStructure();
+
 vector<vector<double> > ModuleHelper::initializeVolatility(){
 //	string directoryPath = getDirectoryPath();
 //	directoryPath += "\\src\\defs\\SwaptionVolatilityOnly.txt";
@@ -121,6 +120,7 @@ vector<vector<double> > ModuleHelper::initializeVolatility(){
 	vector<vector<double> > volData = importDataFromFile(directoryPath);
 	return volData;
 }
+
 vector<double> ModuleHelper::initializeSwaptionVolatilityMaturity(){
 //	string directoryPath = getDirectoryPath();
 //	directoryPath += "\\src\\defs\\SwaptionVolatilityMaturity.txt";

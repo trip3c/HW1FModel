@@ -25,26 +25,19 @@
 #include "BlacksFormula.h"
 #include <boost/math/distributions/inverse_gaussian.hpp>
 
-void main1(void);
-
-
 BaseModule::BaseModule() {
 	// TODO Auto-generated constructor stub
-//	logger = Logger::getLogger();
-//	logg = Logger::getLogger();
 }
 
 BaseModule::~BaseModule() {
 	// TODO Auto-generated destructor stub
-//	getLo.close();
-//	logg.close();
 }
 
 
 void BaseModule::calculateEt(){
 	data.Et.assign(data.time.size(), 0);
 	data.Et[0] = exp(data.aMeanReversion[0] * data.time[0]);
-	for(int i = 1; i<data.time.size(); ++i){
+	for(unsigned int i = 1; i<data.time.size(); ++i){
 		data.Et[i]  = exp(data.aMeanReversion[i] * (data.time[i] - data.time[i-1])) * data.Et[i-1];
 	}
 }
@@ -56,24 +49,20 @@ double BaseModule::calculateB(double t, double T){
     for (int i = position_t+1; i <= position_T; i++){
         summation = summation + (data.time[i] - data.time[i-1]) / data.Et[i];
     }
-//    if(t){ //TODO Xiaohan to validate - Chandra
     if(position_t){
         summation = summation * data.Et[position_t];
     }
-    FILE_LOG(logDEBUG) << "calculateB = " << summation <<"\tposition_t=\t"<<position_t << "\tposition_T=\t" << position_T ;
+    FILE_LOG(logDEBUG3) << "calculateB = " << summation <<"\tposition_t=\t"<<position_t << "\tposition_T=\t" << position_T ;
     return summation;
 }
 
 
 int BaseModule::locate(double t){
-    //return index in vector for given value
-//	std::cout << t <<" ";
 	if (t==0)
 		return -1;
 	std::map<double,int>::iterator it;
 	it = timePos.find(t);
 	assert(it!=timePos.end());
-//	std::cout << it->second << std::endl;
     return it->second;
 }
 
@@ -88,14 +77,14 @@ double BaseModule::calculateVr(double t){
         Vr += pow(data.Et[i], 2) * pow(data.sigma[i], 2) * (data.time[i] - data.time[i-1]);
     }
     Vr = Vr / pow(data.Et[position_t], 2);
-    FILE_LOG(logDEBUG) << "calculateVr = \t" << Vr ;
+    FILE_LOG(logDEBUG3) << "calculateVr = \t" << Vr ;
     return Vr;
 }
 
 double BaseModule::calculateVp(double Tf, double Tp){
     //Vp always have t=0 in our Problem
 	double t = calculateVr(Tf) * pow(calculateB(Tf, Tp), 2);
-	FILE_LOG(logDEBUG) << "calculateVp = " << t ;
+	FILE_LOG(logDEBUG3) << "calculateVp = " << t ;
     return t;
 }
 
@@ -105,19 +94,15 @@ double BaseModule::calculateA(double t, double T){
     double P0t=1;
     if(t){
         P0t=data.priceD[position_t];
-        //f0t=data.f[position_t];
     }
     double valB = calculateB(t, T);
     double x = log(data.priceD[position_T] / P0t) ;
     double y = valB * data.forward[position_t+1];
     double z = 0.5 * pow(valB, 2) * calculateVr(t);
     double t1 = x + y - z;
-    FILE_LOG(logDEBUG) << "calculateA = " << x << "+" << y << "-" << z << "=" << t1 ;
+    FILE_LOG(logDEBUG3) << "calculateA = " << x << "+" << y << "-" << z << "=" << t1 ;
     return t1;
 }
-
-//-----------------------
-
 
 // Returns the erf() of a value (not super precise, but ok)
 double BaseModule::erf(double x){
@@ -150,11 +135,11 @@ double BaseModule::ZBP(double Tf, double Tp, double X){
 double BaseModule::fun_r(const vector<double>& c, const vector<double>& A, const vector<double>& B, double r){
     double ret = 0;
     double t1=0, t2=0;
-    for(int i = 0; i < c.size(); ++i){
+    for(unsigned int i = 0; i < c.size(); ++i){
     	t1=B[i] * r;
     	t2 = exp(A[i] - t1);
         ret += c[i] * t2;
-        FILE_LOG(logDEBUG) << "fun_r\t" << i << "\t" << "\t" << A[i]<< "\t" << B[i] <<"\t" << c[i] << "\t" << "\t"<<t1<<"\t"<<t2<<"\t"<<ret;
+        FILE_LOG(logDEBUG3) << "fun_r\t" << i << "\t" << "\t" << A[i]<< "\t" << B[i] <<"\t" << c[i] << "\t" << "\t"<<t1<<"\t"<<t2<<"\t"<<ret;
     }
     return ret - 1;
 }
@@ -163,34 +148,28 @@ double BaseModule::fun_r(const vector<double>& c, const vector<double>& A, const
 double BaseModule::fun_dev(const vector<double>& c, const vector<double>& A, const vector<double>& B, double r){
     double d = 0;
     double t3 = 0, t1=0, t2=0 ;
-    for(int i = 0; i < c.size(); ++i){
+    for(unsigned int i = 0; i < c.size(); ++i){
     	t1 = B[i] * r;
     	t2 = A[i] - t1;
     	t3 = exp(t2) * B[i];
         d = d - c[i] * t3;
-        FILE_LOG(logDEBUG) << "fun_dev\t" << i << "\t" << A[i]<< "\t" << B[i] <<"\t" << c[i] << "\t" << t1<<"\t"<<t2<<"\t"<<t3<<"\t"<<d;
+        FILE_LOG(logDEBUG3) << "fun_dev\t" << i << "\t" << A[i]<< "\t" << B[i] <<"\t" << c[i] << "\t" << t1<<"\t"<<t2<<"\t"<<t3<<"\t"<<d;
     }
     return d;
 }
 
 //Newton's algorithm to solve r*
 double BaseModule::solveR(const vector<double>& c, const vector<double>& A, const vector<double>& B){
-//	double r = 0.5;
-//	while (fabs(fun_r(c, A, B, r)) > 1E-10) {
-//		r = r - fun_r(c, A, B, r) / fun_dev(c, A, B, r);
-//	}
-//	return r;
-//
     double r = 0.5;
     double fun_rValue = fun_r(c, A, B, r);
     double fun_devValue = 0;
     double temp=0;
-    FILE_LOG(logDEBUG) << "solveR-->\t" << fun_rValue << "\t" << fun_devValue <<"\t" << temp <<"\t"<<r;
+    FILE_LOG(logDEBUG3) << "solveR-->\t" << fun_rValue << "\t" << fun_devValue <<"\t" << temp <<"\t"<<r;
     while(fabs(fun_rValue) > 1E-10){
     	fun_devValue = fun_dev(c, A, B, r);
     	temp = (fun_rValue/fun_devValue);
     	r = r-temp;
-    	FILE_LOG(logDEBUG) << "solveR\t" << fun_rValue << "\t" << fun_devValue <<"\t" <<temp <<"\t"<<r;
+    	FILE_LOG(logDEBUG3) << "solveR\t" << fun_rValue << "\t" << fun_devValue <<"\t" <<temp <<"\t"<<r;
     	fun_rValue = fun_r(c, A, B, r);
     }
     return r;
@@ -206,8 +185,7 @@ double BaseModule::pSwaption(double strike, double T0, double Tp){
     vector<double> Bi(cashFlowTimes);
     for(int i = 0; i < cashFlowTimes; ++i){
         Ti[i] = data.time[position_T0 + i + 1];
-//        ci[i] = strike * (Ti[i] - data.time[position_T0 + i]);
-        ci[i] = strike * Constants::PAYMENT_FREQ;
+        ci[i] = strike * serviceLocator.getDefaultsPaymentFrequency();
         Ai[i]=calculateA(T0, Ti[i]);
         Bi[i]=calculateB(T0, Ti[i]);
         FILE_LOG(logDEBUG) << "Ai=" << Ai[i] << " Bi=" << Bi[i] << " ci=" << ci[i] << " Ti=" << Ti[i]
@@ -245,17 +223,17 @@ double BaseModule::takeDev(const vector<double>& value, double point, int n){
 vector<double> BaseModule::theta(){
     vector<double> V(data.time.size());
     vector<double> theta_vec(data.time.size());
-    for(int i = 0; i < data.time.size(); ++i){
+    for(unsigned int i = 0; i < data.time.size(); ++i){
         vector<double> sig(i+1);
-        for(int j=0; j<=i; j++){
+        for(unsigned int j=0; j<=i; j++){
             sig[j]=data.sigma[j] * calculateB(data.time[j], data.time[i]);
         }
         V[i]=pow(sig[0], 2) * data.time[0] ;
-        for(int j = 1; j <= i; ++j){
+        for(unsigned int j = 1; j <= i; ++j){
             V[i]= V[i]+pow(sig[j], 2) * (data.time[j]-data.time[j-1]);
         }
     }
-    for(int i = 0; i < data.time.size(); ++i){
+    for(unsigned int i = 0; i < data.time.size(); ++i){
         theta_vec[i]=takeDev(data.forward, data.time[i], 1)
         		+ data.aMeanReversion[i] * data.forward[i]
         		+ 0.5 * (takeDev(V, data.time[i], 2) + data.aMeanReversion[i] * takeDev(V, data.time[i], 1));
@@ -277,13 +255,11 @@ double BaseModule::calculateVswap(double T0, double Tn){
 
 
 void BaseModule::assignConstantMeanReversion(double val){
-//	double a = Constants::FIXED_MEAN_REVERSION;
 	int x = data.time.size();
 	data.aMeanReversion.assign(x, val);
 }
 
 void BaseModule::assignConstantVol(double val){
-//	double s1 = Constants::FIXED_VOLATILITY;
 	int x = data.time.size();
 	data.sigma.assign(x, val);
 }
@@ -304,7 +280,7 @@ double BaseModule::impliedVarianceRatios(double maturity, double tenor1, double 
 	double num = (pM-pT2)*b1;
 	double den = (pM-pT1)*b2;
 	double value = pow((num/den), 2.0);
-	FILE_LOG(logDEBUG) << "ImplVarianceRatio=\t" <<"Mat=\t"<<maturity<<"\ttenor1=\t"<<tenor1<<"\ttenor2=\t"
+	FILE_LOG(logDEBUG3) << "ImplVarianceRatio=\t" <<"Mat=\t"<<maturity<<"\ttenor1=\t"<<tenor1<<"\ttenor2=\t"
 			<<tenor2<< "\tpM=\t" <<pM<<"\tpT1=\t" <<pT1 <<"\tpT2=\t"
 			<<pT2<< "\tb1=\t" <<b1 <<"\tb2="<< b2<<"\tnum=\t" << num << "\tden=\t" << den << "\t" << value;
 	return value;
@@ -314,7 +290,7 @@ void BaseModule::initializeAndAssignConstantWeights(){
 	int rows = actualVol.maturity.size();
 	int cols = actualVol.tenor.size();
 	for (int i=0; i<rows; i++){
-		vector<double> rowi (cols, Constants::CONSTANT_WEIGHT);
+		vector<double> rowi (cols, serviceLocator.getDefaultsPaymentFrequency());
 		actualVol.weights.push_back(rowi);
 	}
 }
@@ -339,7 +315,7 @@ double BaseModule::meanReversionCalibrationFunctionF(){
 				double impliedVolRatio = actualVol.vol[i][j+1]/actualVol.vol[i][j];
 				func[i][j] = weightRatio * pow((volRatio-impliedVolRatio),2.0);
 				funcTotal += func[i][j];
-				FILE_LOG(logDEBUG) << "MeanReversionM2[" << i << "][" << j <<"]" <<"\t" << "Mat" << "\t" << actualVol.maturity[i] << "\t"
+				FILE_LOG(logDEBUG3) << "MeanReversionM2[" << i << "][" << j <<"]" <<"\t" << "Mat" << "\t" << actualVol.maturity[i] << "\t"
 						<< "Ten1" << "\t" << actualVol.tenor[j] << "\t"  << "Ten2" << "\t" << actualVol.tenor[j+1] << "\t"
 						<< "weightRatio=\t" << weightRatio << "\tVswapRatio=\t" << volRatio << "\tImplVolRatio=\t"
 						<< impliedVolRatio << "\tFunc=\t" << func[i][j] << "\tFuncTotal=\t" << funcTotal;
@@ -350,7 +326,7 @@ double BaseModule::meanReversionCalibrationFunctionF(){
 }
 
 double BaseModule::volatilityCalibrationFunctionG(){
-	FILE_LOG(logDEBUG) << "VolatilityCalibration-FunctionG starts";
+	FILE_LOG(logDEBUG3) << "VolatilityCalibration-FunctionG starts";
 	int rows = actualVol.maturity.size();
 	int cols = actualVol.tenor.size();
 	vector<vector<double> > func;
@@ -375,7 +351,7 @@ double BaseModule::volatilityCalibrationFunctionG(){
 				double priceRatio = priceModel/priceBlack;
 				func[i][j] = actualVol.weights[i][j]*pow((priceRatio - 1),2.0);
 				funcTotal += func[i][j];
-				FILE_LOG(logDEBUG) << "VolatilityCalibration[" << i << "][" << j <<"]" <<"\t" << "Mat"
+				FILE_LOG(logDEBUG3) << "VolatilityCalibration[" << i << "][" << j <<"]" <<"\t" << "Mat"
 						<< "\t" << actualVol.maturity[i] << "\t" << "Ten" << "\t" << actualVol.tenor[j] << "\t"
 						<< "PriceModel=\t" << priceModel << "\tPriceBlack=\t" << priceBlack
 						<< "\tweight=\t" << actualVol.weights[i][j] << "\tPriceRatio=\t" << priceRatio
@@ -391,7 +367,7 @@ double BaseModule::strikeRateForSwaptionATM(double maturity, double tenor){
 	int tenPosition = locate(tenor);
 	double cashFlowsSum = 0.0;
 	for(int i=matPosition+1; i<=tenPosition; i++){
-		cashFlowsSum += Constants::PAYMENT_FREQ*data.priceD[i];
+		cashFlowsSum += serviceLocator.getDefaultsPaymentFrequency()*data.priceD[i];
 	}
 	return (data.priceD[matPosition]-data.priceD[tenPosition])/cashFlowsSum;
 }
@@ -407,114 +383,97 @@ void BaseModule::initializeStrikeRateForSwaptionATM(){
 	}
 }
 
-double BaseModule::blackFormula(double K, double F, double v, int w){
-
-}
-
 vector<double> BaseModule::simulatedAnnealingFuncForMeanReversion(){
-//	double x0 = 0.02;
-//	double xmin = 0.00;
-//	double xmax = 0.5;
-	double A0_min = 0.01, A1_max = 0.1;
-	double A0_0 = A0_min * 1.2, A1_0 = A1_max*0.8, A2_0 = 0.5; //equivalent to x=A0, A1, A2
-	double sd0_0= 0.005, sd1_0=0.005, sd2_0=0.005;
+	double A0_min = serviceLocator.getMeanReversionA0(), A1_max = serviceLocator.getMeanReversionA1();
+	double A0_0 = A0_min * 1.2, A1_0 = A1_max*0.8, A2_0 = serviceLocator.getMeanReversionA2(); //equivalent to x=A0, A1, A2
+	double sd0_0= serviceLocator.getMeanReversionSDA0(),
+			sd1_0=serviceLocator.getMeanReversionSDA1(),
+			sd2_0=serviceLocator.getMeanReversionSDA2();
 
-		assignVaryingMeanReversion(A0_0, A1_0, A2_0);
-		double fLast = meanReversionCalibrationFunctionF();
+	assignVaryingMeanReversion(A0_0, A1_0, A2_0);
+	double fLast = meanReversionCalibrationFunctionF();
 
-		double gamma = 5.0;
-//		double sd0 = 1.5;
-		int totalNoOfSimulation = 100;
-		int iterationNo = 1;
-		vector<double> fxVector, xrVector, sigmajVector;
-		fxVector.push_back(fLast);
-//		xrVector.push_back(x0);
-//		sigmajVector.push_back(sd0);
-//		double xr = x0;
-//		double x = x0;
-//		double xlast = x0;
-		double fx = fLast;
-		double A0r = A0_0, A1r=A1_0, A2r=A2_0;
-		double A0 = A0_0, A1=A1_0, A2=A2_0;
-		double A0last = A0_0, A1last=A1_0, A2last=A2_0;
-		double A3=0;
-		double aVal;
-		int counter = 0;
-		double minFx = fLast;
-		double minA0 = A0_0;
-		double minA1 = A1_0;
-		double minA2 = A2_0;
+	double gamma = serviceLocator.getMeanReversionGamma();
+	int totalNoOfSimulation = serviceLocator.getMeanReversionSimulations();
+	int iterationNo = 1;
+	vector<double> fxVector, xrVector, sigmajVector;
+	fxVector.push_back(fLast);
+	double fx = fLast;
+	double A0 = A0_0, A1=A1_0, A2=A2_0;
+	int counter = 0;
+	double minFx = fLast;
+	double minA0 = A0_0;
+	double minA1 = A1_0;
+	double minA2 = A2_0;
 
-		boost::mt19937 *rng2 = new boost::mt19937();
-		rng2->seed(time(NULL));
-		// http://stackoverflow.com/questions/15747194/why-is-boosts-random-number-generation-on-a-normal-distribution-always-giving
+	boost::mt19937 *rng2 = new boost::mt19937();
+	rng2->seed(time(NULL));
 
-//		aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
-		FILE_LOG(logDEBUG) << "SimulatedAnn-Final\t" << iterationNo << "\t" << A0_0 << "\t" << sd0_0 << "\t" << A1_0 << "\t" << sd1_0 << "\t" << A2_0 << "\t" << sd2_0 << "\t" << 0 << "\t" << fLast;
-		do {
-			double sd0j = coolingMechanism(gamma, sd0_0, totalNoOfSimulation, iterationNo);
-			normal_distribution<> distribution0(A0, sd0j);
-			variate_generator<boost::mt19937&, normal_distribution<> > generate_next0(*rng2, distribution0);
+	FILE_LOG(logDEBUG) << "SimulatedAnnMeanReversion\t" << iterationNo << "\t" << A0_0 << "\t" << sd0_0 << "\t" << A1_0 << "\t" << sd1_0 << "\t" << A2_0 << "\t" << sd2_0 << "\t" << 0 << "\t" << fLast;
+	do {
+		double sd0j = coolingMechanism(gamma, sd0_0, totalNoOfSimulation, iterationNo);
+		normal_distribution<> distribution0(A0, sd0j);
+		variate_generator<boost::mt19937&, normal_distribution<> > generate_next0(*rng2, distribution0);
 
-			double sd1j = coolingMechanism(gamma, sd1_0, totalNoOfSimulation, iterationNo);
-			normal_distribution<> distribution1(A1, sd1j);
-			variate_generator<boost::mt19937&, normal_distribution<> > generate_next1(*rng2, distribution1);
+		double sd1j = coolingMechanism(gamma, sd1_0, totalNoOfSimulation, iterationNo);
+		normal_distribution<> distribution1(A1, sd1j);
+		variate_generator<boost::mt19937&, normal_distribution<> > generate_next1(*rng2, distribution1);
 
-			double sd2j = coolingMechanism(gamma, sd2_0, totalNoOfSimulation, iterationNo);
-			normal_distribution<> distribution2(A2, sd2j);
-			variate_generator<boost::mt19937&, normal_distribution<> > generate_next2(*rng2, distribution2);
+		double sd2j = coolingMechanism(gamma, sd2_0, totalNoOfSimulation, iterationNo);
+		normal_distribution<> distribution2(A2, sd2j);
+		variate_generator<boost::mt19937&, normal_distribution<> > generate_next2(*rng2, distribution2);
 
-			counter = 0;
-			int simulationInnerCount = coolingMechanism(gamma, totalNoOfSimulation, totalNoOfSimulation, iterationNo);
-			do{
-				A0 = generate_next0();
-				A1 = generate_next1();
-				A2 = generate_next2();
-//			}while((A1-A0)>A1minusA0MinTolerance && (A1-A0)<A1minusA0MaxTolerance && (A1>A0));
-				if((A0_min<A0) && (A0<A1_max) && (A0_min<A1) && (A1<A1_max) && (A2>0) && (A0<A1)){
-					assignVaryingMeanReversion(A0, A1, A2);
-					fx = meanReversionCalibrationFunctionF();
-					FILE_LOG(logDEBUG) << "SimulatedAnn-Counter\t" << iterationNo << "\t" << A0 << "\t" << sd0j
-							<< "\t" << A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << fx;
-					++counter;
-				}
-			}while(fx>=fLast && counter<simulationInnerCount);
-			fxVector.push_back(fx);
-			fLast = fx;
-			++iterationNo;
-			if (minFx > fx){
-				minFx = fx;
-				minA0 = A0;
-				minA1 = A1;
-				minA2 = A2;
+		counter = 0;
+		int simulationInnerCount = coolingMechanism(gamma, totalNoOfSimulation, totalNoOfSimulation, iterationNo);
+		do{
+			A0 = generate_next0();
+			A1 = generate_next1();
+			A2 = generate_next2();
+			if((A0_min<A0) && (A0<A1_max) && (A0_min<A1) && (A1<A1_max) && (A2>0) && (A0<A1)){
+				assignVaryingMeanReversion(A0, A1, A2);
+				fx = meanReversionCalibrationFunctionF();
+				FILE_LOG(logDEBUG) << "SimulatedAnnMeanReversion-Counter\t" << iterationNo << "\t" << A0 << "\t" << sd0j
+						<< "\t" << A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << fx;
+				++counter;
 			}
-//			aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
+		}while(fx>=fLast && counter<simulationInnerCount);
+		fxVector.push_back(fx);
+		fLast = fx;
+		++iterationNo;
+		if (minFx > fx){
+			minFx = fx;
+			minA0 = A0;
+			minA1 = A1;
+			minA2 = A2;
+		}
 
-			FILE_LOG(logDEBUG) << "SimulatedAnn-Final\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1
-					<< "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << fx
-					<< "\t" << minA0 << "\t" << minA1 << "\t" << minA2;
-		}while(iterationNo < totalNoOfSimulation);
-		FILE_LOG(logDEBUG) << "SimulatedAnn-Min-Fx\t" << minFx << "\t" << minA0 << "\t" << minA1 << "\t" << minA2;
-		vector<double> retValue;
-		retValue.push_back(minA0);
-		retValue.push_back(minA1);
-		retValue.push_back(minA2);
-		retValue.push_back(minFx);
-		return retValue;
+		FILE_LOG(logDEBUG) << "SimulatedAnnMeanReversion\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1
+				<< "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << counter << "\t" << fx
+				<< "\t" << minA0 << "\t" << minA1 << "\t" << minA2;
+	}while(iterationNo < totalNoOfSimulation);
+	FILE_LOG(logINFO) << "SimulatedAnnMeanReversion-Final\t" << minFx << "\t" << minA0 << "\t" << minA1 << "\t" << minA2;
+	vector<double> retValue;
+	retValue.push_back(minA0);
+	retValue.push_back(minA1);
+	retValue.push_back(minA2);
+	retValue.push_back(minFx);
+	return retValue;
 }
 
-void BaseModule::assignVaryingMeanReversion(double A0, double A1, double A2){
-//	A3 = *(--(data.time.end()))/2;
-	double A3 = (*(--(actualVol.maturity.end())) + *(--(actualVol.tenor.end())))/2;
-//	A3 = 10.0;
-	FILE_LOG(logDEBUG) << "VaryingMeanRev\tA3=\t"<<A3;
+void BaseModule::assignVaryingMeanReversion(double A0, double A1, double A2, double A3){
+	FILE_LOG(logDEBUG3) << "VaryingMeanRev\tA3=\t"<<A3;
 	for(vector<double>::iterator it = data.time.begin(), it1 = data.aMeanReversion.begin(); it!=data.time.end(); ++it, ++it1){
 		*it1 = logisticFunc(A0, A1, A2, A3, *it);
 	}
 	for(vector<double>::iterator it = data.time.begin(), it1 = data.aMeanReversion.begin(); it!=data.time.end(); ++it, ++it1){
-		FILE_LOG(logDEBUG) << "VaryingMeanRev\t" << *it << "\t" << *it1 ;
+		FILE_LOG(logDEBUG3) << "VaryingMeanRev\t" << *it << "\t" << *it1 ;
 	}
 	calculateEt();
+}
+
+void BaseModule::assignVaryingMeanReversion(double A0, double A1, double A2){
+	double A3 = (*(--(actualVol.maturity.end())) + *(--(actualVol.tenor.end())))/2;
+	assignVaryingMeanReversion(A0, A1, A2, A3);
 }
 
 double BaseModule::cubicFunc(double a0, double a1, double a2, double a3, double ti){
@@ -524,7 +483,7 @@ double BaseModule::cubicFunc(double a0, double a1, double a2, double a3, double 
 void BaseModule::assignVaryingVolatility(double a0, double a1, double a2, double a3){
 	double x1 = (-a2+sqrt(pow(a2,2) - 3*a1*a3))/(3*a3);
 	double x2 = -a2 / (3*a3);
-	FILE_LOG(logDEBUG) << "VaryingSigma-(x1,x2)\t" << x1 << "\t" << x2;
+	FILE_LOG(logDEBUG3) << "VaryingSigma-(x1,x2)\t" << x1 << "\t" << x2;
 	for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); it!=data.time.end(); ++it, ++it1){
 		if(*it < x2){
 			*it1 = (a1 + 2 * a2 * x2 + 3 * a3 * pow(x2, 2)) * (*it - x2) + cubicFunc(a0, a1, a2, a3, x2);
@@ -537,14 +496,14 @@ void BaseModule::assignVaryingVolatility(double a0, double a1, double a2, double
 		}
 	}
 	for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); it!=data.time.end(); ++it, ++it1){
-		FILE_LOG(logDEBUG) << "VaryingSigma\t" << *it << "\t" << *it1 ;
+		FILE_LOG(logDEBUG3) << "VaryingSigma\t" << *it << "\t" << *it1 ;
 	}
 }
 
 void BaseModule::assignVaryingVolatilityUpwardSloping(double a0, double a1, double a2, double a3){
 	double x1 = (-a2-sqrt(pow(a2,2) - 3*a1*a3))/(3*a3);
 	double x2 = -a2 / (3*a3);
-	FILE_LOG(logDEBUG) << "VaryingSigma-(x1,x2)\t" << x1 << "\t" << x2;
+	FILE_LOG(logDEBUG3) << "VaryingSigma-(x1,x2)\t" << x1 << "\t" << x2;
 	for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); it!=data.time.end(); ++it, ++it1){
 		if(*it < x2){
 			*it1 = (a1 + 2 * a2 * x2 + 3 * a3 * pow(x2, 2)) * (*it - x2) + cubicFunc(a0, a1, a2, a3, x2);
@@ -557,7 +516,7 @@ void BaseModule::assignVaryingVolatilityUpwardSloping(double a0, double a1, doub
 		}
 	}
 	for(vector<double>::iterator it = data.time.begin(), it1 = data.sigma.begin(); it!=data.time.end(); ++it, ++it1){
-		FILE_LOG(logDEBUG) << "VaryingSigma\t" << *it << "\t" << *it1 ;
+		FILE_LOG(logDEBUG3) << "VaryingSigma\t" << *it << "\t" << *it1 ;
 	}
 }
 
@@ -624,179 +583,12 @@ bool BaseModule::validCubicFuncUpwardSloping(double a0, double a1, double a2, do
 	return true;
 }
 
-void BaseModule::simulatedAnnealingFunc2(int calibMethod){
-//	double x0 = 0.02;
-//	double xmin = 0.00;
-//	double xmax = 0.5;
-	double A0_0 = -0.01, A1_0 = 0.1, A2_0 = 0.5; //equivalent to x=A0, A1, A2
-	double sd0_0= 1, sd1_0=1, sd2_0=0.05;
-	double A1minusA0 = A1_0 - A0_0;
-	double A1minusA0MinTolerance = 0.75*A1minusA0;
-	double A1minusA0MaxTolerance = 1.25*A1minusA0;
-
-//		assignConstantMeanReversion(x0);
-//		double fr = meanReversionCalibrationFunctionF();
-
-		double gamma = 5.0;
-//		double sd0 = 1.5;
-		int totalNoOfSimulation = 100;
-		int iterationNo = 1;
-		vector<double> fxVector, xrVector, sigmajVector;
-//		fxVector.push_back(fr);
-//		xrVector.push_back(x0);
-//		sigmajVector.push_back(sd0);
-//		double xr = x0;
-//		double x = x0;
-//		double xlast = x0;
-//		double fx;
-		double A0r = A0_0, A1r=A1_0, A2r=A2_0;
-		double A0 = A0_0, A1=A1_0, A2=A2_0;
-		double A0last = A0_0, A1last=A1_0, A2last=A2_0;
-		double A3=100;
-		double aVal;
-
-		boost::mt19937 *rng2 = new boost::mt19937();
-		rng2->seed(time(NULL));
-		// http://stackoverflow.com/questions/15747194/why-is-boosts-random-number-generation-on-a-normal-distribution-always-giving
-
-		aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
-		FILE_LOG(logINFO) << iterationNo << "\t" << A0_0 << "\t" << sd0_0 << "\t" << A1_0 << "\t" << sd1_0 << "\t" << A2_0 << "\t" << sd2_0 << "\t" << aVal;
-		do {
-			double sd0j = coolingMechanism(gamma, sd0_0, totalNoOfSimulation, iterationNo);
-			normal_distribution<> distribution0(A0, sd0j);
-			variate_generator<boost::mt19937&, normal_distribution<> > generate_next0(*rng2, distribution0);
-
-			double sd1j = coolingMechanism(gamma, sd1_0, totalNoOfSimulation, iterationNo);
-			normal_distribution<> distribution1(A1, sd1j);
-			variate_generator<boost::mt19937&, normal_distribution<> > generate_next1(*rng2, distribution1);
-
-			double sd2j = coolingMechanism(gamma, sd2_0, totalNoOfSimulation, iterationNo);
-			normal_distribution<> distribution2(A2, sd2j);
-			variate_generator<boost::mt19937&, normal_distribution<> > generate_next2(*rng2, distribution2);
-
-			do{
-				A0 = generate_next0();
-				A1 = generate_next1();
-				A2 = generate_next2();
-			}while((A1-A0)>A1minusA0MinTolerance && (A1-A0)<A1minusA0MaxTolerance && (A1>A0));
-
-			++iterationNo;
-			aVal = logisticFunc(A0,A1,A2,A3,iterationNo);
-
-			FILE_LOG(logINFO) << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << aVal;
-		}while(iterationNo < totalNoOfSimulation);
-}
-
 double BaseModule::logisticFunc(double A0, double A1, double A2, double A3, double ti){
 	return A0+(A1-A0)/(1+exp(A2*(A3-ti)));
 }
 
-
-void BaseModule::simulatedAnnealingFunc1(int calibMethod){
-	double x0 = 0.02;
-	double xmin = 0.00;
-	double xmax = 0.5;
-
-		assignConstantMeanReversion(x0);
-		double fr = meanReversionCalibrationFunctionF();
-
-		double gamma = 5.0;
-		double sigma0 = 1.5;
-		int totalNoOfSimulation = 100;
-		int iterationNo = 1;
-		vector<double> fxVector, xrVector, sigmajVector;
-		fxVector.push_back(fr);
-		xrVector.push_back(x0);
-		sigmajVector.push_back(sigma0);
-		double xr = x0;
-		double x = x0;
-		double xlast = x0;
-		double fx;
-		boost::mt19937 *rng2 = new boost::mt19937();
-		rng2->seed(time(NULL));
-		// http://stackoverflow.com/questions/15747194/why-is-boosts-random-number-generation-on-a-normal-distribution-always-giving
-
-		FILE_LOG(logINFO) << x0 << "\t" << sigma0 ;
-		do {
-			double sigmaj = coolingMechanism(gamma, sigma0, totalNoOfSimulation, iterationNo);
-			normal_distribution<> distribution(x, sigmaj);
-			variate_generator<boost::mt19937&, normal_distribution<> > generate_next(*rng2, distribution);
-
-			if (x == x0 || xlast == x){
-				x = generate_next();
-			}
-			while (!(x > xmin && x < xmax)){
-				x = generate_next();
-			}
-			xlast = x;
-
-			FILE_LOG(logINFO) << x << "\t" << sigmaj << "\t";
-			++iterationNo;
-		}while(iterationNo < totalNoOfSimulation);
-}
-
 double BaseModule::coolingMechanism(double gamma, double sigma0, int totalNoOfSimulation, int iterationNo){
 	return sigma0 * exp(-gamma*iterationNo/(totalNoOfSimulation-1));
-}
-
-std::mt19937 BaseModule::get_prng() {
-//    std::uint_least32_t seed_data[std::mt19937::state_size];
-//    std::random_device r;
-//    std::generate_n(seed_data, std::mt19937::state_size, std::ref(r));
-//    std::seed_seq q(std::begin(seed_data), std::end(seed_data));
-//    return std::mt19937{q};
-}
-
-template<class T>
-T gen_normal_4(T generator,
-            std::vector<double> &res)
-{
-  for(size_t i=0; i<res.size(); ++i)
-    res[i]=generator();
-  // Note the generator is returned back
-  return  generator;
-}
-
-//void main1(void)
-//{
-////  boost::variate_generator<boost::mt19937, boost::normal_distribution<> >
-////    generator(boost::mt19937(time(0)),
-////              boost::normal_distribution<>());
-////
-////  std::vector<double> res(10);
-////  // Assigning back to the generator ensures the state is advanced
-////  generator=gen_normal_4(generator, res);
-////
-////  for(size_t i=0; i<10; ++i)
-////    std::cout<<res[i]
-////             <<std::endl;
-////
-////  generator=gen_normal_4(generator, res);
-////
-////  for(size_t i=0; i<10; ++i)
-////    std::cout<<res[i]
-////             <<std::endl;
-//
-//    // Construct a standard normal distribution s
-//      normal s; // (default mean = zero, and standard deviation = unity)
-//      cout << "Standard normal distribution, mean = "<< s.mean()
-//        << ", standard deviation = " << s.standard_deviation() << endl;
-//
-//}
-
-void main1(void)
-{
-	boost::mt19937 *rng2 = new boost::mt19937();
-	rng2->seed(time(NULL));
-
-	normal_distribution<> distribution(0, 1);
-	variate_generator<boost::mt19937&, normal_distribution<> > resampler(*rng2, distribution);
-//	boost::variate_generator< boost::mt19937, boost::normal_distribution<> > resampler(*rng2, distribution);
-//
-	for (int i = 0; i < 10; ++i)
-	{
-		cout << resampler() << endl ;
-	}
 }
 
 vector<vector<double> > BaseModule::transposeVector(vector<vector<double> > numbers){
@@ -834,56 +626,38 @@ void BaseModule::printVectorVector(vector<vector<double> > vec){
 	cout << endl;
 }
 
-vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
-//	double A0_0=0.814719, A1_0=-0.0584122, A2_0=-0.00192567 ,A3_0=0.000213964;
-//	double A0_0=0.14203958, A1_0=-0.0115965, A2_0=-0.0003823 ,A3_0=0.000042478;
-//	double A0_0=0.012168895, A1_0=-0.000966275, A2_0=-0.0000318552,A3_0=0.00000353947;
-//	double A0_0=0.00977275, A1_0=-0.000614657, A2_0=-0.0000132694,A3_0=0.00000547935;
+void BaseModule::simulatedAnnealingFuncForVolatility(){
 	double A0_0=volatilityParams.A0, A1_0=volatilityParams.A1, A2_0=volatilityParams.A2,A3_0=volatilityParams.A3;
+	double sd0_0=fabs(A0_0)*serviceLocator.getVolatilitySDA0();
+	double sd1_0=fabs(A1_0)*serviceLocator.getVolatilitySDA1();
+	double sd2_0=fabs(A2_0)*serviceLocator.getVolatilitySDA2();
+	double sd3_0=fabs(A3_0)*serviceLocator.getVolatilitySDA3();
 
-	//Upward Sloping
-//	double A0_0=0.004470501, A1_0=0.000525428, A2_0=0.0000173218,A3_0=-0.00000192464;
-	double sd0_0=fabs(A0_0)/3;
-	double sd1_0=fabs(A1_0)/3;
-	double sd2_0=fabs(A2_0)/3;
-	double sd3_0=fabs(A3_0)/3;
+	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Local-1stCall";
+	assignVaryingMeanReversion(serviceLocator.getMeanReversionA0(), serviceLocator.getMeanReversionA1(), serviceLocator.getMeanReversionA2());
 
-//	vector<double> optimalMeanReversion = simulatedAnnealingFuncForMeanReversion();
-	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Final-1stCall";
-//	assignVaryingMeanRevetrsion(optimalMeanReversion[0],optimalMeanReversion[1],optimalMeanReversion[2],0);
-//	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.52434, 0);
-//	assignVaryingMeanReversion(0.0100008, 0.0788238, -0.52434, 0);
-//	assignVaryingMeanReversion(0.0100008, 0.0788238, 0.25, 0);
-	assignVaryingMeanReversion(0.0500008, 0.1088238, 0.5);
-
-//	assignConstantMeanReversion(0.05);
 	calculateEt();
-//	assignVaryingVolatility(A0_0, A1_0, A2_0, A3_0);
-	assignVaryingVolatilitySpline(A0_0, A1_0, A2_0, A3_0);
+	assignVaryingVolatility(A0_0, A1_0, A2_0, A3_0);
+//	assignVaryingVolatilitySpline(A0_0, A1_0, A2_0, A3_0);
 	double gLast = volatilityCalibrationFunctionG();
 
-	double gamma = 5.0;
-	int totalNoOfSimulation = 100;
+	double gamma = serviceLocator.getVolatilityGamma();
+	int totalNoOfSimulation = serviceLocator.getVolatilitySimulations();
 	int iterationNo = 1;
 	vector<double> fxVector;//, xrVector, sigmajVector;
 	fxVector.push_back(gLast);
 	double gx = gLast;
-//	double A0r = A0_0, A1r=A1_0, A2r=A2_0;
 	double A0 = A0_0, A1=A1_0, A2=A2_0, A3=A3_0;
-//	double A0last = A0_0, A1last=A1_0, A2last=A2_0;
 	int counter = 0;
 	double minGx = gLast;
 
 	boost::mt19937 *rng2 = new boost::mt19937();
 	rng2->seed(time(NULL));
 
-	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Final\t" << iterationNo << "\t" << A0_0 << "\t" << sd0_0 << "\t"
-			<< A1_0 << "\t" << sd1_0 << "\t" << A2_0 << "\t" << sd2_0 << "\t" << A3_0 << "\t" << sd3_0 << "\t" << 0 << "\t" << gLast;
-	double minA0 = A0_0;
-	double minA1 = A1_0;
-	double minA2 = A2_0;
-	double minA3 = A3_0;
-	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Final-2ndCall";
+	FILE_LOG(logINFO) << "SimulatedAnnVol-Local\t" << iterationNo << "\t" << A0 << "\t" << sd0_0 << "\t"
+			<< A1 << "\t" << sd1_0 << "\t" << A2 << "\t" << sd2_0 << "\t" << A3 << "\t" << sd3_0 << "\t" << counter << "\t" << gx
+			<< "\tGlobal\t" << volatilityParams.Gx << "\t" << volatilityParams.A0
+			<< "\t" << volatilityParams.A1 << "\t" << volatilityParams.A2 << "\t" << volatilityParams.A3;
 	do {
 		double sd0j = coolingMechanism(gamma, sd0_0, totalNoOfSimulation, iterationNo);
 		normal_distribution<> distribution0(A0, sd0j);
@@ -902,20 +676,21 @@ vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 				variate_generator<boost::mt19937&, normal_distribution<> > generate_next3(*rng2, distribution3);
 
 		counter=0;
-		int simulationInnerCount = coolingMechanism(gamma, sd3_0, totalNoOfSimulation, iterationNo);
+		int simulationInnerCount = coolingMechanism(gamma, totalNoOfSimulation, totalNoOfSimulation, iterationNo);
 		do{
 			A0 = generate_next0();
 			A1 = generate_next1();
 			A2 = generate_next2();
 			A3 = generate_next3();
-//			if(validCubicFunc(A0,A1,A2,A3)){
-			if(validCubicFuncSpline(A0,A1,A2,A3)){
-//				assignVaryingVolatility(A0, A1, A2, A3);
-				assignVaryingVolatilitySpline(A0, A1, A2, A3);
+			if(validCubicFunc(A0,A1,A2,A3)){
+//			if(validCubicFuncSpline(A0,A1,A2,A3)){
+				assignVaryingVolatility(A0, A1, A2, A3);
+//				assignVaryingVolatilitySpline(A0, A1, A2, A3);
 				gx = volatilityCalibrationFunctionG();
-				FILE_LOG(logDEBUG) << "SimulatedAnnVol-Counter\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t" << A1
+				FILE_LOG(logDEBUG) << "SimulatedAnnVol-Counter\t" << iterationNo << "\t" << counter << "\t"
+						<< A0 << "\t" << sd0j << "\t" << A1
 						<< "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << A3
-						<< "\t" << sd3j<< "\t" << counter << "\t" << gx;
+						<< "\t" << sd3j<< "\t" << gx;
 				++counter;
 			}
 		}while(gx>=gLast && counter<=simulationInnerCount);
@@ -923,44 +698,32 @@ vector<double> BaseModule::simulatedAnnealingFuncForVolatility(){
 		gLast = gx;
 		++iterationNo;
 		if (minGx > gx){
-			minGx = gx;
-			minA0 = A0;
-			minA1 = A1;
-			minA2 = A2;
-			minA3 = A3;
-			volatilityParams.A0 = minA0;
-			volatilityParams.A1 = minA1;
-			volatilityParams.A2 = minA2;
-			volatilityParams.A3 = minA3;
-			volatilityParams.Gx = minGx;
+			volatilityParams.A0 = A0;
+			volatilityParams.A1 = A1;
+			volatilityParams.A2 = A2;
+			volatilityParams.A3 = A3;
+			volatilityParams.Gx = gx;
 		}
 
-		FILE_LOG(logDEBUG) << "SimulatedAnnVol-Final\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t"
+		FILE_LOG(logDEBUG) << "SimulatedAnnVol-Local\t" << iterationNo << "\t" << A0 << "\t" << sd0j << "\t"
 				<< A1 << "\t" << sd1j << "\t" << A2 << "\t" << sd2j << "\t" << A3 << "\t" << sd3j << "\t" << counter << "\t" << gx
-				<< "\t" << minA0 << "\t" << minA1 << "\t" << minA2 << "\t" << minA3;
+				<< "\tGlobal\t" << volatilityParams.Gx << "\t" << volatilityParams.A0
+				<< "\t" << volatilityParams.A1 << "\t" << volatilityParams.A2 << "\t" << volatilityParams.A3;
 	}while(iterationNo < totalNoOfSimulation);
-	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Min-Gx\t" << minGx << "\t" << minA0 << "\t" << minA1 << "\t" << minA2 << "\t" << minA3;
-	FILE_LOG(logDEBUG) << "SimulatedAnnVol-Min-Gx<--------------------------->";
 	vector<double> retValue;
-	retValue.push_back(minA0);
-	retValue.push_back(minA1);
-	retValue.push_back(minA2);
-	retValue.push_back(minA3);
-	retValue.push_back(minGx);
 	FILE_LOG(logINFO) << "SimulatedAnnVol-GlobalMin-Gx\t" << volatilityParams.Gx << "\t" << volatilityParams.A0
 			<< "\t" << volatilityParams.A1 << "\t" << volatilityParams.A2 << "\t" << volatilityParams.A3;
-	return retValue;
 }
 
 void BaseModule::checkMeanReversionConvergence(int loopCount){
-	FILE_LOG(logDEBUG) << "ConvergeMeanReversion\tCounter\tA0\tA1\tA2\tFx";
+	FILE_LOG(logDEBUG3) << "ConvergeMeanReversion\tCounter\tA0\tA1\tA2\tFx";
 	for(int i=0; i<loopCount; ++i){
 		vector<double> convergeVector = simulatedAnnealingFuncForMeanReversion();
 		double A0 = convergeVector[0];
 		double A1 = convergeVector[1];
 		double A2 = convergeVector[2];
 		double Fx = convergeVector[3];
-		FILE_LOG(logDEBUG) << "ConvergeMeanReversion\t" <<i+1<<"\t"<< A0 << "\t" << A1 <<"\t" << A2 << "\t" << Fx;
+		FILE_LOG(logDEBUG3) << "ConvergeMeanReversion\t" <<i+1<<"\t"<< A0 << "\t" << A1 <<"\t" << A2 << "\t" << Fx;
 	}
 }
 
@@ -974,14 +737,14 @@ double BaseModule::blackSwaptionPriceATM(double maturity, double tenor, double i
     double Bl = swapRate * w * (N(w*d1,0,1) - N(w*d2,0,1));
     double multiplier = 0;
     for(int i = locate(maturity)+1; i <= locate(maturity + tenor);i++)
-        multiplier += Constants::PAYMENT_FREQ * data.priceD[i];
+        multiplier += serviceLocator.getDefaultsConstantWeights() * data.priceD[i];
     return Bl * multiplier;
 }
 
 double BaseModule::blackImpliedVolatilitySwaptionATM(double maturity, double tenor, double price, double swapRate){
 	double multiplier = 0;
 	for(int i = locate(maturity)+1; i <= locate(maturity + tenor);i++){
-		multiplier += Constants::PAYMENT_FREQ * data.priceD[i];
+		multiplier += serviceLocator.getDefaultsConstantWeights() * data.priceD[i];
 	}
 	double val = ((price/multiplier)+swapRate)/2.0/swapRate;
 	return RationalApproximation(val)*2;
@@ -989,14 +752,8 @@ double BaseModule::blackImpliedVolatilitySwaptionATM(double maturity, double ten
 
 double BaseModule::RationalApproximation(double p)
 {
-//	double t=sqrt(-2*log(p));
-//	vector<double> c {2.515517, 0.802853, 0.010328};
-//	vector<double> d {1.432788, 0.189269, 0.001308};
-//	return t-((c[0] + (c[1]*t) + (c[2]*t*t))/(1+(d[0]*t)+(d[1]*t*t)+(d[2]*t*t*t)));
-//	boost::math::inverse_gaussian_distribution my_inv(p);
 	boost::math::normal dist(0.0, 1.0);
 	return boost::math::quantile(dist, p);
-
 }
 
 void BaseModule::assignVaryingVolatilitySpline(double a0, double a1, double a2, double a3){

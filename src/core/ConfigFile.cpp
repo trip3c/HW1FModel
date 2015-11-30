@@ -1,5 +1,4 @@
 #include "ConfigFile.h"
-
 #include <fstream>
 
 std::string trim(std::string const& source, char const* delims = " \t\r\n") {

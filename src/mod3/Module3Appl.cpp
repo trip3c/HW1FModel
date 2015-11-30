@@ -37,18 +37,16 @@ int Module3Appl::moduleMainFunc(){
 	actualVol.maturity = helper.initializeSwaptionVolatilityMaturity();
 	actualVol.tenor = helper.initializeSwaptionVolatilityTenor();
 
-	for(int i=0; i<data.time.size(); i++){
+	for(unsigned int i=0; i<data.time.size(); i++){
 		timePos[data.time[i]] = i;
 	}
 
-	assignConstantMeanReversion(Constants::FIXED_MEAN_REVERSION);
-	assignConstantVol(Constants::FIXED_VOLATILITY);
+	assignConstantMeanReversion(serviceLocator.getMeanReversionConstant());
+	assignConstantVol(serviceLocator.getVolatilityConstant());
 	calculateEt();
 
 	double t = 0.0;
 	double T = 0.0;
-	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
-	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 //	cout << "Maturity\\Tenor\t" ;
 //	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
 //		cout << *it_ten << "\t";
@@ -68,8 +66,8 @@ int Module3Appl::moduleMainFunc(){
 
 	initializeAndAssignConstantWeights();
 //	meanReversionCalibrationFunctionF();
-//	simulatedAnnealingFunc();
-	checkMeanReversionConvergence(25);
+	simulatedAnnealingFuncForMeanReversion();
+//	checkMeanReversionConvergence(25);
 
 	return 0;
 }

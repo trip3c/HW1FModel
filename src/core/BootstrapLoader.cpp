@@ -46,6 +46,8 @@ void BootstrapLoader::loadConfigs(std::string configFile){
 			cf.Value(Constants::CONFIG_SECTIONS_MEANREVERSION, Constants::CONFIG_MEANREVERSION_SD_A2);
 	meanReversionMap[Constants::CONFIG_MEANREVERSION_GAMMA] =
 			cf.Value(Constants::CONFIG_SECTIONS_MEANREVERSION, Constants::CONFIG_MEANREVERSION_GAMMA);
+	meanReversionMap[Constants::CONFIG_MEANREVERSION_SIMULATIONS] =
+			cf.Value(Constants::CONFIG_SECTIONS_MEANREVERSION, Constants::CONFIG_MEANREVERSION_SIMULATIONS);
 
 	volatilityMap[Constants::CONFIG_VOLATILITY_CONSTANT] =
 			cf.Value(Constants::CONFIG_SECTIONS_VOLATILITY, Constants::CONFIG_VOLATILITY_CONSTANT);
@@ -65,6 +67,10 @@ void BootstrapLoader::loadConfigs(std::string configFile){
 			cf.Value(Constants::CONFIG_SECTIONS_VOLATILITY, Constants::CONFIG_VOLATILITY_SD_A2);
 	volatilityMap[Constants::CONFIG_VOLATILITY_SD_A3] =
 			cf.Value(Constants::CONFIG_SECTIONS_VOLATILITY, Constants::CONFIG_VOLATILITY_SD_A3);
+	volatilityMap[Constants::CONFIG_VOLATILITY_GAMMA] =
+			cf.Value(Constants::CONFIG_SECTIONS_VOLATILITY, Constants::CONFIG_VOLATILITY_GAMMA);
+	volatilityMap[Constants::CONFIG_VOLATILITY_SIMULATIONS] =
+			cf.Value(Constants::CONFIG_SECTIONS_VOLATILITY, Constants::CONFIG_VOLATILITY_SIMULATIONS);
 
 	filesMapPath[Constants::CONFIG_SWAPTION_MATURITY] =
 		(std::string) cf.Value(Constants::CONFIG_SECTIONS_FILES, Constants::CONFIG_SWAPTION_MATURITY);
@@ -127,6 +133,9 @@ double BootstrapLoader::getMeanReversionSDA2(){
 double BootstrapLoader::getMeanReversionGamma(){
 	return getDoubleValue(meanReversionMap, Constants::CONFIG_MEANREVERSION_GAMMA);
 }
+double BootstrapLoader::getMeanReversionSimulations(){
+	return getDoubleValue(volatilityMap, Constants::CONFIG_MEANREVERSION_SIMULATIONS);
+}
 
 double BootstrapLoader::getVolatilityConstant(){
 	return getDoubleValue(volatilityMap, Constants::CONFIG_VOLATILITY_CONSTANT);
@@ -154,6 +163,12 @@ double BootstrapLoader::getVolatilitySDA2(){
 }
 double BootstrapLoader::getVolatilitySDA3(){
 	return getDoubleValue(volatilityMap, Constants::CONFIG_VOLATILITY_SD_A3);
+}
+double BootstrapLoader::getVolatilityGamma(){
+	return getDoubleValue(volatilityMap, Constants::CONFIG_VOLATILITY_GAMMA);
+}
+double BootstrapLoader::getVolatilitySimulations(){
+	return getDoubleValue(volatilityMap, Constants::CONFIG_VOLATILITY_SIMULATIONS);
 }
 
 string BootstrapLoader::getSwaptionVolatility(){

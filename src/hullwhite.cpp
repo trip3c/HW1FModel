@@ -8,9 +8,7 @@
 
 #include "appl/ApplicationHullWhite.h"
 #include "core/log.h"
-#include "core/ConfigFile.h"
 #include <iostream>
-#include <map>
 using namespace std;
 #include "core/Constants.h"
 #include "core/BootstrapLoader.h"

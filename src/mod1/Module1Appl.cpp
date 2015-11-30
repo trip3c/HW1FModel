@@ -74,8 +74,6 @@ int Module1Appl::moduleMainFunc(){
 	double t = 0.0;
 	double T = 0.0;
 	initializeStrikeRateForSwaptionATM();
-	cout << "a\t" << *(data.aMeanReversion.begin())<<endl;
-	cout << "sigma\t" << *(data.sigma.begin())<<endl;
 	cout << "Maturity\\Tenor\t" ;
 	for(vector<double>::iterator it_ten = actualVol.tenor.begin(); it_ten != actualVol.tenor.end(); ++it_ten){
 		cout << *it_ten << "\t";
